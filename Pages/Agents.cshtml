@@ -1,0 +1,31 @@
+﻿@page
+@model LIME.Pages.AgentsModel
+@{
+    ViewData["Title"] = "Agents";
+}
+
+<a asp-page="/Agents/Add">Add</a>
+<table style="width: 100%">
+    <tr>
+        <th>Name</th>
+        <th>Status</th>
+        <th>Address</th>
+    </tr>
+    @if (this.Model.Agents.Count < 1)
+    {
+        <tr>
+            <td>No agents.</td>
+        </tr>
+    }
+    else
+    {
+        @foreach (var client in this.Model.Agents)
+        {
+            <tr>
+                <td>@(client.Name)</td>
+                <td>@(client.Activated ? "NYI" : "Pending")</td>
+                <td>@(client.Address):@(client.Port)</td>
+            </tr>
+        }
+    }
+</table>

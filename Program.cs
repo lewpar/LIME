@@ -1,6 +1,8 @@
 using LIME.Database;
 using LIME.Services;
 
+using Microsoft.EntityFrameworkCore;
+
 namespace LIME;
 
 class Program
@@ -36,6 +38,8 @@ class Program
             app.UseExceptionHandler("/Error");
         }
 
+        RunDatabaseMigrations(app);
+
         app.UseStaticFiles();
 
         app.UseRouting();
@@ -45,5 +49,14 @@ class Program
 
         app.MapControllers();
         app.MapRazorPages();
+    }
+
+    static void RunDatabaseMigrations(WebApplication app)
+    {
+        using (var scope = app.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<LimeDbContext>();
+            dbContext.Database.Migrate();
+        }
     }
 }

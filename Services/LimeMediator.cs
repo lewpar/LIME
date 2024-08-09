@@ -72,7 +72,7 @@ public class LimeMediator
         {
             if (!await TryHeartbeatAsync(client))
             {
-                logger.LogWarning($"Agent '{client.Client.Client.RemoteEndPoint}' did not respond to heartbeat. Disconnecting..");
+                logger.LogWarning($"Agent '{client.Socket.RemoteEndPoint}' did not respond to heartbeat. Disconnecting..");
                 ConnectedAgents.Remove(client);
             }
         }

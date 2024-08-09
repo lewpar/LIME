@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using LIME.Database.Tables;
+
+using Microsoft.EntityFrameworkCore;
 
 namespace LIME.Database;
 
@@ -6,6 +8,9 @@ public class LimeDbContext : DbContext
 {
     private readonly ILogger<LimeDbContext> logger;
     private readonly IConfiguration config;
+
+    public DbSet<Agents> Agents { get; set; }
+    public DbSet<AgentsPending> AgentsPending { get; set; }
 
     public LimeDbContext(DbContextOptions options, 
         ILogger<LimeDbContext> logger, IConfiguration config) : base(options) 

@@ -14,10 +14,10 @@ else
 {
     @foreach (var client in this.Model.Mediator.ConnectedAgents)
     {
-        @if (client.Client is not null)
+        @if (client.IsConnected)
         {
             <div style="border: 1px solid black; padding: 0.5rem">
-                @client.Client.Client.RemoteEndPoint
+                @client.Socket.RemoteEndPoint
             </div>
         }
     }

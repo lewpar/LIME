@@ -5,26 +5,25 @@ namespace LIME.Models.Mediator;
 
 public class MediatorClient
 {
-    public TcpClient? Client { get; set; }
+    public string? Name { get; set; }
+    public bool IsConnected { get; set; }
+
+    public NetworkStream Stream { get; set; }
+    public Socket Socket { get; set; }
+
+    public MediatorClient(Socket socket, NetworkStream stream)
+    {
+        this.Socket = socket;
+        this.Stream = stream;
+    }
 
     public async Task SendPacketAsync(LimePacket packet)
     {
-        if(Client is null)
+        if(!Stream.CanWrite)
         {
             return;
         }
 
-        if(!Client.Connected)
-        {
-            return;
-        }
-
-        var stream = Client.GetStream();
-        if(!stream.CanWrite)
-        {
-            return;
-        }
-
-        await stream.WriteAsync(packet.ToData());
+        await Stream.WriteAsync(packet.ToData());
     }
 }

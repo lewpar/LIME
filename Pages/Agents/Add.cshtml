@@ -1,0 +1,41 @@
+﻿@page
+@model LIME.Pages.Agents.AddModel
+@{
+    ViewData["Title"] = "Add | Agents";
+}
+
+<a asp-page="/Agents">Back</a>
+
+<form method="post" class="lime-form">
+    <div class="lime-form-item">
+        <label for="Name">Name</label>
+        <input type="text" name="Name" value="Agent 47" />
+        <span class="text-danger">@Html.ValidationMessage("Name")</span>
+    </div>
+
+    <div class="lime-form-item">
+        <label for="IPAddress">IP Address</label>
+        <input type="text" name="IPAddress" value="127.0.0.1" />
+        <span class="text-danger">@Html.ValidationMessage("IPAddress")</span>
+    </div>
+
+    <div class="lime-form-item">
+        <label for="Port">Port</label>
+        <input type="text" name="Port" value="55124" />
+        <span class="text-danger">@Html.ValidationMessage("Port")</span>
+    </div>
+
+    <div class="lime-form-item">
+        <button type="submit">Add Agent</button>
+    </div>
+</form>
+
+@if (this.Model.Error is not null)
+{
+    <span class="text-danger">@this.Model.Error</span>
+}
+
+@if (this.Model.AddSecret is not null)
+{
+    <span class="text-success">Agent added. Save this secret so you can connect your agent: @this.Model.AddSecret</span>
+}

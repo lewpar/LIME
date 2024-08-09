@@ -61,8 +61,7 @@ public class LimeMediatorGateway : BackgroundService
 
         _listener.Start();
 
-        _ = Task.Run(() => AcceptConnectionsAsync(stoppingToken));
-        _ = Task.Run(() => SendHeartbeatsAsync(stoppingToken));
+        await AcceptConnectionsAsync(stoppingToken);
     }
 
     private async Task AcceptConnectionsAsync(CancellationToken stoppingToken)
@@ -75,27 +74,13 @@ public class LimeMediatorGateway : BackgroundService
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            // Accept new connections
-            await AcceptConnectionAsync(await _listener.AcceptTcpClientAsync());
+            var client = await _listener.AcceptTcpClientAsync();
+            _ = HandleAcceptConnectionAsync(client);
         }
     }
 
-    private async Task SendHeartbeatsAsync(CancellationToken stoppingToken)
-    {
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            // Heartbeat connected clients
-            await mediator.SendHeartbeatsAsync();
-        }
-    }
-
-    private async Task AcceptConnectionAsync(TcpClient client)
+    private async Task HandleAcceptConnectionAsync(TcpClient client)
     {
         logger.LogInformation($"Client '{client.Client.RemoteEndPoint}' connected.");
-
-        mediator.ConnectedAgents.Add(new MediatorClient()
-        {
-            Client = client
-        });
     }
 }
