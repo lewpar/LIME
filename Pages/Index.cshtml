@@ -4,7 +4,21 @@
     ViewData["Title"] = "Home page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+
+<div style="font-weight: bold; font-size: 1.25rem">Connected Clients</div>
+@if (this.Model.Mediator.ConnectedAgents.Count < 1)
+{
+    <div>No clients connected.</div>
+}
+else
+{
+    @foreach (var client in this.Model.Mediator.ConnectedAgents)
+    {
+        @if (client.Client is not null)
+        {
+            <div style="border: 1px solid black; padding: 0.5rem">
+                @client.Client.Client.RemoteEndPoint
+            </div>
+        }
+    }
+}

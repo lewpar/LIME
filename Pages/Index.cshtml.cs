@@ -1,19 +1,15 @@
-using Microsoft.AspNetCore.Mvc;
+using LIME.Services;
+
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace LIME.Pages;
 
 public class IndexModel : PageModel
 {
-    private readonly ILogger<IndexModel> _logger;
+    public LimeMediator Mediator { get; set; }
 
-    public IndexModel(ILogger<IndexModel> logger)
+    public IndexModel(LimeMediator mediator)
     {
-        _logger = logger;
-    }
-
-    public void OnGet()
-    {
-
+        this.Mediator = mediator;
     }
 }

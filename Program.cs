@@ -1,3 +1,6 @@
+using LIME.Database;
+using LIME.Services;
+
 namespace LIME;
 
 class Program
@@ -17,6 +20,11 @@ class Program
 
     static void ConfigureServices(IServiceCollection services)
     {
+        services.AddSingleton<LimeMediator>();
+        services.AddHostedService<LimeMediatorGateway>();
+
+        services.AddDbContext<LimeDbContext>();
+
         services.AddControllers();
         services.AddRazorPages();
     }
