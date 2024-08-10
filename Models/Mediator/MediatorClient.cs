@@ -1,11 +1,13 @@
 ﻿using LIME.Models.Network;
+
 using System.Net.Sockets;
 
 namespace LIME.Models.Mediator;
 
 public class MediatorClient
 {
-    public string? Name { get; set; }
+    public Database.Tables.Agents Info { get; set; }
+
     public bool IsConnected { get; set; }
 
     public NetworkStream Stream { get; set; }

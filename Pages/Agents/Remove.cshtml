@@ -1,0 +1,19 @@
+﻿@page
+@model LIME.Pages.Agents.RemoveModel
+@{
+    ViewData["Title"] = "Remove | Agents";
+}
+
+<a asp-page="/Agents">Back</a>
+
+<form method="post" class="lime-form">
+    <input type="hidden" name="id" value="@this.Model.AgentId"/>
+
+    <div class="lime-form-item">
+        <span class="text-warning">Are you sure you want to remove this agent?</span>
+    </div>
+
+    <div class="lime-form-item">
+        <button type="submit">Yes</button>
+    </div>
+</form>

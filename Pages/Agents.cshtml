@@ -10,6 +10,7 @@
         <th>Name</th>
         <th>Status</th>
         <th>Address</th>
+        <th>Actions</th>
     </tr>
     @if (this.Model.Agents.Count < 1)
     {
@@ -23,8 +24,25 @@
         {
             <tr>
                 <td>@(client.Name)</td>
-                <td>@(client.Activated ? "NYI" : "Pending")</td>
+                <td>
+                @if (client.Activated)
+                {
+                    @if(1 == 1)
+                    {
+                        <span class="text-success">Online</span>
+                    }
+                    else
+                    {
+                        <span class="text-danger">Offline</span>
+                    }
+                }
+                else
+                {
+                    <span class="text-warning">Pending</span>
+                }
+                </td>
                 <td>@(client.Address):@(client.Port)</td>
+                <td><a asp-page="/Agents/Remove" asp-route-id="@(client.Id)">Delete</a></td>
             </tr>
         }
     }
