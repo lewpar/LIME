@@ -34,7 +34,7 @@ class Program
             app.UseExceptionHandler("/Error");
         }
 
-        RunDatabaseMigrations(app);
+        //RunDatabaseMigrations(app);
 
         app.UseStaticFiles();
 
