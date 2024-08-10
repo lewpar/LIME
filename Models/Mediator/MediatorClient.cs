@@ -6,8 +6,6 @@ namespace LIME.Models.Mediator;
 
 public class MediatorClient
 {
-    public Database.Tables.Agents Info { get; set; }
-
     public bool IsConnected { get; set; }
 
     public NetworkStream Stream { get; set; }

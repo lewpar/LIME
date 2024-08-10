@@ -44,7 +44,6 @@ public class AddModel : PageModel
             Id = pending.Id,
             Name = model.Name,
             Address = model.IPAddress,
-            Port = model.Port,
             Activated = false
         };
 

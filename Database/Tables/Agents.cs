@@ -17,9 +17,6 @@ public class Agents
     [Column("address")]
     public string? Address { get; set; }
 
-    [Column("port")]
-    public string? Port { get; set; }
-
     [Column("activated")]
     public bool Activated { get; set; }
 }

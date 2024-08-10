@@ -41,7 +41,7 @@
                     <span class="text-warning">Pending</span>
                 }
                 </td>
-                <td>@(client.Address):@(client.Port)</td>
+                <td>@(client.Address)</td>
                 <td><a asp-page="/Agents/Remove" asp-route-id="@(client.Id)">Delete</a></td>
             </tr>
         }

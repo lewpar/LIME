@@ -14,8 +14,4 @@ public class AddAgentDataModel
     [Required(AllowEmptyStrings = false, ErrorMessage = "You must enter an IP Address.")]
     [ValidateIPAddress(ErrorMessage = "Invalid IP Address.")]
     public string? IPAddress { get; set; }
-
-    [Required(AllowEmptyStrings = false, ErrorMessage = "You must enter a port.")]
-    [ValidatePort(ErrorMessage = "Invalid port.")]
-    public string? Port { get; set; }
 }
