@@ -29,7 +29,7 @@ public class AddModel : PageModel
             return Page();
         }
 
-        var secret = RandomNumberGenerator.GetBytes(32).ToHexString();
+        var secret = Guid.NewGuid().ToByteArray().ToHexString();
 
         var pending = new AgentsPending()
         {
