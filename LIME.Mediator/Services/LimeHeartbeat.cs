@@ -1,0 +1,94 @@
+﻿using LIME.Mediator.Models;
+using LIME.Shared.Network;
+
+using Microsoft.Extensions.Hosting;
+
+using System.Security.Cryptography;
+
+namespace LIME.Mediator.Services;
+
+internal class LimeHeartbeat : BackgroundService
+{
+    private readonly LimeMediator mediator;
+
+    public LimeHeartbeat(LimeMediator mediator)
+    {
+        this.mediator = mediator;
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        while(!stoppingToken.IsCancellationRequested)
+        {
+            await Task.Delay(10000);
+
+            var tasks = mediator.ConnectedClients.Select(c => SendHeartbeatAsync(c));
+            await Task.WhenAll(tasks);
+        }
+    }
+
+    private async Task SendHeartbeatAsync(LimeClient client)
+    {
+        var msg = RandomNumberGenerator.GetBytes(1);
+        var packet = new LimePacket(LimePacketType.SMSG_HEARTBEAT) { Data = msg };
+
+        try
+        {
+            await client.SendPacketAsync(packet);
+
+            var responseTask = client.ReadPacketAsync(LimePacketType.CMSG_HEARTBEAT);
+
+            if(await Task.WhenAny(responseTask, Task.Delay(15000)) == responseTask)
+            {
+                var responsePacket = await responseTask;
+
+                if(responsePacket is null)
+                {
+                    await SendDisconnectAsync(client);
+                    return;
+                }
+
+                if(responsePacket.Type != LimePacketType.CMSG_HEARTBEAT)
+                {
+                    await SendDisconnectAsync(client);
+                    return;
+                }
+
+                if(responsePacket.Data is null || !responsePacket.Data.SequenceEqual(msg))
+                {
+                    await SendDisconnectAsync(client);
+                    return;
+                }
+
+                // Heartbeat passed, client is ok.
+
+                return;
+            }
+            else
+            {
+                // Respond too slow
+                await SendDisconnectAsync(client);
+            }
+        }
+        catch(Exception)
+        {
+            await SendDisconnectAsync(client);
+        }
+    }
+
+    private async Task SendDisconnectAsync(LimeClient client)
+    {
+        if(client.Socket is null)
+        {
+            return;
+        }
+
+        var packet = new LimePacket(LimePacketType.SMSG_DISCONNECT)
+        {
+            Data = new byte[] { 0x01 }
+        };
+
+        await client.SendPacketAsync(packet);
+        client.Socket.Close();
+    }
+}
