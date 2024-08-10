@@ -1,4 +1,5 @@
-﻿using LIME.Shared.Network;
+﻿using LIME.Mediator.Configuration;
+using LIME.Shared.Network;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -12,55 +13,18 @@ namespace LIME.Mediator.Services;
 
 public class LimeGateway : BackgroundService
 {
-    private TcpListener? _listener;
+    private TcpListener _listener;
     private readonly ILogger<LimeGateway> logger;
 
-    public LimeGateway(IConfiguration config, ILogger<LimeGateway> logger)
+    public LimeGateway(LimeMediatorConfig config, ILogger<LimeGateway> logger)
     {
         this.logger = logger;
 
-        ConfigureMediator(config);
-    }
-
-    private void ConfigureMediator(IConfiguration config)
-    {
-        var portEntry = config["LIME:MediatorListenPort"];
-        if (string.IsNullOrWhiteSpace(portEntry))
-        {
-            logger.LogCritical("No port found for MediatorListenPort in appsettings.json.");
-            return;
-        }
-
-        if (!int.TryParse(portEntry, out var port))
-        {
-            logger.LogCritical("Invalid port found for MediatorListenPort in appsettings.json.");
-            return;
-        }
-
-        var endpointEntry = config["LIME:MediatorEndpoint"];
-        if (string.IsNullOrWhiteSpace(portEntry))
-        {
-            logger.LogCritical("No endpoint found for MediatorEndpoint in appsettings.json.");
-            return;
-        }
-
-        if (!IPAddress.TryParse(endpointEntry, out var endpoint))
-        {
-            logger.LogCritical("Invalid endpoint found for MediatorEndpoint in appsettings.json.");
-            return;
-        }
-
-        _listener = new TcpListener(endpoint, port);
+        _listener = new TcpListener(config.MediatorBindAddress, config.MediatorListenPort);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        if (_listener is null)
-        {
-            logger.LogCritical("LimeMediator listener failed to initialize.");
-            return;
-        }
-
         _listener.Start();
 
         await AcceptConnectionsAsync(stoppingToken);
@@ -68,12 +32,6 @@ public class LimeGateway : BackgroundService
 
     private async Task AcceptConnectionsAsync(CancellationToken stoppingToken)
     {
-        if (_listener is null)
-        {
-            logger.LogCritical("LimeMediator listener failed to initialize.");
-            return;
-        }
-
         while (!stoppingToken.IsCancellationRequested)
         {
             var client = await _listener.AcceptTcpClientAsync();
