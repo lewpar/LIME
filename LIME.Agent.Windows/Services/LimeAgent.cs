@@ -66,7 +66,7 @@ internal class LimeAgent : IHostedService
                 return false;
             }
 
-
+            logger.LogInformation("Handshake succeeded.");
         }
         catch(Exception ex)
         {

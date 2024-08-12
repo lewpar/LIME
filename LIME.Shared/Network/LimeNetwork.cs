@@ -23,8 +23,8 @@ public static class LimeNetwork
         return (LimePacketType)await ReadIntAsync(stream);
     }
 
-    public static async Task WriteBytesAsync(this NetworkStream stream, byte[] bytes, int length)
+    public static async Task WriteBytesAsync(this NetworkStream stream, byte[] bytes)
     {
-        await stream.WriteAsync(bytes, 0, length);
+        await stream.WriteAsync(bytes);
     }
 }

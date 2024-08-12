@@ -1,18 +1,20 @@
 ﻿using LIME.Shared.Network;
+
 using System.Net.Sockets;
+using System.Text;
 
 namespace LIME.Mediator.Models;
 
 public class LimeClient
 {
-    public Socket Socket { get; private set; }
-    public NetworkStream Stream { get; private set; }
+    public required LimeClientState State { get; set; }
 
-    public LimeClient(Socket socket, NetworkStream stream)
-    {
-        this.Socket = socket;
-        this.Stream = stream;
-    }
+    public required Socket Socket { get; set; }
+    public required NetworkStream Stream { get; set; }
+
+    public required Guid Guid { get; set; }
+
+    public LimeClient() { }
 
     public async Task SendPacketAsync(LimePacket packet)
     {
@@ -25,35 +27,16 @@ public class LimeClient
         await Stream.WriteAsync(data);
     }
 
-    public async Task<LimePacket?> ReadPacketAsync(LimePacketType packetType)
+    public async Task DisconnectAsync(string message)
     {
-        if (Stream is null || !Stream.CanRead)
-        {
-            return null;
-        }
+        var packet = new LimePacket(LimePacketType.SMSG_DISCONNECT);
+        packet.Data = Encoding.UTF8.GetBytes(message);
 
-        try
-        {
-            var buffer = new byte[sizeof(int)];
+        var build = packet.Build();
+        await Stream.WriteAsync(build);
 
-            await Stream.ReadAsync(buffer, 0, sizeof(int));
-            var limePacketType = (LimePacketType)BitConverter.ToInt32(buffer);
+        Socket.Close();
 
-            await Stream.ReadAsync(buffer, 0, sizeof(int));
-            var dataLength = BitConverter.ToInt32(buffer);
-
-            buffer = new byte[dataLength];
-
-            await Stream.ReadAsync(buffer, 0, dataLength);
-
-            var packet = new LimePacket(limePacketType);
-            packet.Data = buffer;
-
-            return packet;
-        }
-        catch(Exception)
-        {
-            return null;
-        }
+        State = LimeClientState.Disconnected;
     }
 }
