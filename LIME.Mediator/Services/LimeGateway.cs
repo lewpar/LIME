@@ -11,7 +11,7 @@ using System.Text;
 
 namespace LIME.Mediator.Services;
 
-public class LimeGateway : BackgroundService
+public partial class LimeGateway : BackgroundService
 {
     private TcpListener _listener;
     private readonly ILogger<LimeGateway> logger;
@@ -26,7 +26,7 @@ public class LimeGateway : BackgroundService
 
         packetHandlers = new Dictionary<LimePacketType, Func<LimeClient, NetworkStream, Task>>()
         {
-            { LimePacketType.CMSG_HANDSHAKE, LimeNetworkHandlers.HandleHandshakeAsync }
+            { LimePacketType.CMSG_HANDSHAKE, HandleHandshakeAsync }
         };
     }
 
@@ -88,7 +88,8 @@ public class LimeGateway : BackgroundService
             
             if(!packetHandlers.ContainsKey(packetType))
             {
-                await client.DisconnectAsync($"Client '{client.Socket.RemoteEndPoint}' sent unknown packet type '{packetType}', disconnecting..");
+                logger.LogWarning($"Client '{client.Socket.RemoteEndPoint}' sent unknown packet type '{packetType}', disconnecting..");
+                await client.DisconnectAsync("Invalid packet.");
                 return;
             }
 
