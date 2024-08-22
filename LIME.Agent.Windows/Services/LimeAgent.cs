@@ -1,10 +1,15 @@
 ﻿using LIME.Agent.Windows.Configuration;
+
+using LIME.Shared.Extensions;
 using LIME.Shared.Network;
 
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
+using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 namespace LIME.Agent.Windows.Services;
@@ -54,13 +59,37 @@ internal class LimeAgent : IHostedService
         return true;
     }
 
+    private bool ValidateServerCertificate(object sender, X509Certificate? certificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
+    {
+        if ((sslPolicyErrors & SslPolicyErrors.RemoteCertificateChainErrors) != 0 &&
+            chain is not null)
+        {
+            foreach (X509ChainStatus status in chain.ChainStatus)
+            {
+                if (status.Status == X509ChainStatusFlags.UntrustedRoot)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        return sslPolicyErrors == SslPolicyErrors.None;
+    }
+
     private async Task<bool> TryHandshakeAsync()
     {
         try
         {
-            var stream = client.GetStream();
+            var stream = new SslStream(client.GetStream(), false, ValidateServerCertificate);
+            await stream.AuthenticateAsClientAsync(new SslClientAuthenticationOptions()
+            {
+                EnabledSslProtocols = SslProtocols.Tls13,
+                TargetHost = "LIME"
+            });
 
-            var packetType = await LimeNetwork.ReadPacketTypeAsync(stream);
+            var packetType = await stream.ReadPacketTypeAsync();
             if (packetType is not LimePacketType.SMSG_HANDSHAKE)
             {
                 logger.LogCritical($"Received unexpected packet type '{packetType}' from server, expected '{LimePacketType.SMSG_HANDSHAKE}'.");
@@ -91,5 +120,7 @@ internal class LimeAgent : IHostedService
     public async Task StopAsync(CancellationToken cancellationToken)
     {
         logger.LogInformation("Lime Agent Stopped.");
+
+        await Task.Delay(1);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using LIME.Shared.Network;
 
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
 
@@ -10,7 +11,7 @@ public class LimeClient
     public required LimeClientState State { get; set; }
 
     public required Socket Socket { get; set; }
-    public required NetworkStream Stream { get; set; }
+    public required SslStream Stream { get; set; }
 
     public required Guid Guid { get; set; }
 

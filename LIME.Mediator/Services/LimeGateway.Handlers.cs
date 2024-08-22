@@ -1,16 +1,16 @@
 ﻿using LIME.Mediator.Models;
-using LIME.Shared.Network;
+using LIME.Shared.Extensions;
 
 using Microsoft.Extensions.Logging;
 
-using System.Net.Sockets;
+using System.Net.Security;
 using System.Text;
 
 namespace LIME.Mediator.Services;
 
 public partial class LimeGateway
 {
-    public async Task HandleHandshakeAsync(LimeClient client, NetworkStream stream)
+    public async Task HandleHandshakeAsync(LimeClient client, SslStream stream)
     {
         var length = await stream.ReadIntAsync();
         var data = await stream.ReadBytesAsync(length);

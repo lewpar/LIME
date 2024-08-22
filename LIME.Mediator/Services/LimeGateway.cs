@@ -1,12 +1,17 @@
 ﻿using LIME.Mediator.Configuration;
 using LIME.Mediator.Models;
+
+using LIME.Shared.Extensions;
 using LIME.Shared.Network;
 
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 namespace LIME.Mediator.Services;
@@ -16,7 +21,7 @@ public partial class LimeGateway : BackgroundService
     private TcpListener _listener;
     private readonly ILogger<LimeGateway> logger;
 
-    private Dictionary<LimePacketType, Func<LimeClient, NetworkStream, Task>> packetHandlers;
+    private Dictionary<LimePacketType, Func<LimeClient, SslStream, Task>> packetHandlers;
 
     public LimeGateway(LimeMediatorConfig config, ILogger<LimeGateway> logger)
     {
@@ -24,7 +29,7 @@ public partial class LimeGateway : BackgroundService
 
         _listener = new TcpListener(config.MediatorBindAddress, config.MediatorListenPort);
 
-        packetHandlers = new Dictionary<LimePacketType, Func<LimeClient, NetworkStream, Task>>()
+        packetHandlers = new Dictionary<LimePacketType, Func<LimeClient, SslStream, Task>>()
         {
             { LimePacketType.CMSG_HANDSHAKE, HandleHandshakeAsync }
         };
@@ -45,11 +50,15 @@ public partial class LimeGateway : BackgroundService
         {
             var client = await _listener.AcceptTcpClientAsync();
 
+            var sslStream = new SslStream(client.GetStream());
+
+            await sslStream.AuthenticateAsServerAsync(new X509Certificate2("certificate.pfx", ""), false, SslProtocols.Tls13, true);
+
             var limeClient = new LimeClient()
             {
                 Guid = Guid.NewGuid(),
                 Socket = client.Client,
-                Stream = client.GetStream(),
+                Stream = sslStream,
                 State = LimeClientState.Connecting
             };
 
@@ -88,7 +97,7 @@ public partial class LimeGateway : BackgroundService
     {
         while(true)
         {
-            var packetType = await LimeNetwork.ReadPacketTypeAsync(client.Stream);
+            var packetType = await client.Stream.ReadPacketTypeAsync();
             
             if(!packetHandlers.ContainsKey(packetType))
             {
@@ -98,6 +107,7 @@ public partial class LimeGateway : BackgroundService
             }
 
             var handler = packetHandlers[packetType];
+
             await handler.Invoke(client, client.Stream);
         }
     }
