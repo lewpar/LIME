@@ -1,8 +1,9 @@
 ﻿using LIME.Agent.Windows.Configuration;
+using LIME.Agent.Windows.Network;
 
 using LIME.Shared.Extensions;
 using LIME.Shared.Network;
-using LIME.Shared.Network.Agent;
+
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 

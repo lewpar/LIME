@@ -1,9 +1,9 @@
 ﻿using LIME.Mediator.Configuration;
 using LIME.Mediator.Models;
+using LIME.Mediator.Network;
 
 using LIME.Shared.Extensions;
 using LIME.Shared.Network;
-using LIME.Shared.Network.Mediator;
 
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;

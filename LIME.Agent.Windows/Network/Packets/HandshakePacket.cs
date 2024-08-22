@@ -1,6 +1,8 @@
 ﻿using System.Text;
 
-namespace LIME.Shared.Network.Mediator;
+using LIME.Shared.Network;
+
+namespace LIME.Agent.Windows.Network;
 
 public class HandshakePacket : ILimePacket
 {
@@ -16,7 +18,7 @@ public class HandshakePacket : ILimePacket
         var data = Encoding.UTF8.GetBytes(agentGuid);
         var ms = new MemoryStream();
 
-        ms.Write(BitConverter.GetBytes((int)LimePacketType.SMSG_HANDSHAKE));
+        ms.Write(BitConverter.GetBytes((int)LimePacketType.CMSG_HANDSHAKE));
         ms.Write(BitConverter.GetBytes(data.Length));
         ms.Write(data);
 

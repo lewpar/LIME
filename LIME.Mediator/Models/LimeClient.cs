@@ -1,8 +1,9 @@
-﻿using LIME.Shared.Network;
-using LIME.Shared.Network.Mediator;
+﻿using LIME.Mediator.Network;
+
+using LIME.Shared.Network;
+
 using System.Net.Security;
 using System.Net.Sockets;
-using System.Text;
 
 namespace LIME.Mediator.Models;
 

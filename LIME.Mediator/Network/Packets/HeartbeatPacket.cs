@@ -1,4 +1,6 @@
-﻿namespace LIME.Shared.Network.Mediator;
+﻿using LIME.Shared.Network;
+
+namespace LIME.Mediator.Network;
 
 public class HeartbeatPacket : ILimePacket
 {
