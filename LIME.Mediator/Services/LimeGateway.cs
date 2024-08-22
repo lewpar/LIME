@@ -44,15 +44,34 @@ public partial class LimeGateway : BackgroundService
         await AcceptConnectionsAsync(stoppingToken);
     }
 
+    private bool ValidateClientCertificate(object sender, X509Certificate? certificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
+    {
+        if ((sslPolicyErrors & SslPolicyErrors.RemoteCertificateChainErrors) != 0 &&
+            chain is not null)
+        {
+            foreach (X509ChainStatus status in chain.ChainStatus)
+            {
+                if (status.Status == X509ChainStatusFlags.UntrustedRoot)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        return sslPolicyErrors == SslPolicyErrors.None;
+    }
+
     private async Task AcceptConnectionsAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
         {
             var client = await _listener.AcceptTcpClientAsync();
 
-            var sslStream = new SslStream(client.GetStream());
+            var sslStream = new SslStream(client.GetStream(), false, ValidateClientCertificate);
 
-            await sslStream.AuthenticateAsServerAsync(new X509Certificate2("certificate.pfx", ""), false, SslProtocols.Tls13, true);
+            await sslStream.AuthenticateAsServerAsync(new X509Certificate2("certificate.pfx", ""), true, SslProtocols.Tls13, true);
 
             var limeClient = new LimeClient()
             {
