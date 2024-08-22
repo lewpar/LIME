@@ -1,6 +1,8 @@
 ﻿using LIME.Mediator.Models;
+
 using LIME.Shared.Extensions;
 using LIME.Shared.Network;
+using LIME.Shared.Network.Mediator;
 
 using Microsoft.Extensions.Hosting;
 
@@ -30,12 +32,10 @@ internal class LimeHeartbeat : BackgroundService
 
     private async Task SendHeartbeatAsync(LimeClient client)
     {
-        var msg = RandomNumberGenerator.GetBytes(1);
-        var packet = new LimePacket(LimePacketType.SMSG_HEARTBEAT) { Data = msg };
-
         try
         {
-            await client.SendPacketAsync(packet);
+            var msg = RandomNumberGenerator.GetBytes(4);
+            await client.SendPacketAsync(new HeartbeatPacket(msg));
 
             var responseTask = client.Stream.ReadPacketTypeAsync();
 
@@ -81,12 +81,7 @@ internal class LimeHeartbeat : BackgroundService
             return;
         }
 
-        var packet = new LimePacket(LimePacketType.SMSG_DISCONNECT)
-        {
-            Data = new byte[] { 0x01 }
-        };
-
-        await client.SendPacketAsync(packet);
+        await client.SendPacketAsync(new DisconnectPacket());
         client.Socket.Close();
     }
 }

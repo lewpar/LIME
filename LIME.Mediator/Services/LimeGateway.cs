@@ -3,6 +3,7 @@ using LIME.Mediator.Models;
 
 using LIME.Shared.Extensions;
 using LIME.Shared.Network;
+using LIME.Shared.Network.Mediator;
 
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -12,7 +13,6 @@ using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 
 namespace LIME.Mediator.Services;
 
@@ -104,10 +104,7 @@ public partial class LimeGateway : BackgroundService
 
     private async Task SendHandshakeAsync(LimeClient client)
     {
-        var handshakePacket = new LimePacket(LimePacketType.SMSG_HANDSHAKE);
-        handshakePacket.Data = Encoding.UTF8.GetBytes(client.Guid.ToString());
-
-        await client.SendPacketAsync(handshakePacket);
+        await client.SendPacketAsync(new HandshakePacket(client.Guid.ToString()));
 
         logger.LogInformation($"Sent handshake to client {client.Socket.RemoteEndPoint}.");
     }

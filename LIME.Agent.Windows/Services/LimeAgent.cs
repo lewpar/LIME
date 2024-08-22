@@ -2,7 +2,7 @@
 
 using LIME.Shared.Extensions;
 using LIME.Shared.Network;
-
+using LIME.Shared.Network.Agent;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -101,10 +101,9 @@ internal class LimeAgent : IHostedService
 
             logger.LogInformation($"Got message: {msg}");
 
-            var packet = new LimePacket(LimePacketType.CMSG_HANDSHAKE);
-            packet.Data = Encoding.UTF8.GetBytes(msg);
+            var packet = new HandshakePacket(msg);
 
-            await stream.WriteBytesAsync(packet.Build());
+            await stream.WriteBytesAsync(packet.Serialize());
 
             logger.LogInformation("Handshake succeeded.");
         }

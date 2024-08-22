@@ -1,5 +1,5 @@
 ﻿using LIME.Shared.Network;
-
+using LIME.Shared.Network.Mediator;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
@@ -17,24 +17,20 @@ public class LimeClient
 
     public LimeClient() { }
 
-    public async Task SendPacketAsync(LimePacket packet)
+    public async Task SendPacketAsync(ILimePacket packet)
     {
         if(Stream is null || !Stream.CanWrite)
         {
             return;
         }
 
-        var data = packet.Build();
-        await Stream.WriteAsync(data);
+        await Stream.WriteAsync(packet.Serialize());
     }
 
     public async Task DisconnectAsync(string message)
     {
-        var packet = new LimePacket(LimePacketType.SMSG_DISCONNECT);
-        packet.Data = Encoding.UTF8.GetBytes(message);
-
-        var build = packet.Build();
-        await Stream.WriteAsync(build);
+        var packet = new DisconnectPacket(message);
+        await Stream.WriteAsync(packet.Serialize());
 
         Socket.Close();
 
