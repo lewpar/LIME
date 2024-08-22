@@ -44,62 +44,75 @@ public partial class LimeGateway : BackgroundService
         await AcceptConnectionsAsync(stoppingToken);
     }
 
-    private bool ValidateClientCertificate(object sender, X509Certificate? certificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
-    {
-        if ((sslPolicyErrors & SslPolicyErrors.RemoteCertificateChainErrors) != 0 &&
-            chain is not null)
-        {
-            foreach (X509ChainStatus status in chain.ChainStatus)
-            {
-                if (status.Status == X509ChainStatusFlags.UntrustedRoot)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        return sslPolicyErrors == SslPolicyErrors.None;
-    }
-
     private async Task AcceptConnectionsAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
         {
             var client = await _listener.AcceptTcpClientAsync();
-
-            var sslStream = new SslStream(client.GetStream(), false, ValidateClientCertificate);
-
-            await sslStream.AuthenticateAsServerAsync(new X509Certificate2("certificate.pfx", ""), true, SslProtocols.Tls13, true);
-
-            var limeClient = new LimeClient()
-            {
-                Guid = Guid.NewGuid(),
-                Socket = client.Client,
-                Stream = sslStream,
-                State = LimeClientState.Connecting
-            };
-
-            _ = HandleAcceptConnectionAsync(limeClient);
+            _ = HandleAcceptConnectionAsync(client);
         }
     }
 
-    private async Task HandleAcceptConnectionAsync(LimeClient client)
+    private async Task HandleAcceptConnectionAsync(TcpClient client)
     {
-        var endpoint = client.Socket.RemoteEndPoint as IPEndPoint;
-        if (endpoint is null)
+        var limeClient = new LimeClient()
         {
-            await client.DisconnectAsync("An internal error occured.");
+            Guid = Guid.NewGuid(),
+            Socket = client.Client,
+            Stream = new SslStream(client.GetStream(), false),
+            State = LimeClientState.Connecting
+        };
+
+        if(!await AuthenticateAsync(limeClient))
+        {
+            await limeClient.DisconnectAsync("Failed authentication.");
             return;
         }
 
-        logger.LogInformation($"Client '{client.Socket.RemoteEndPoint}' connected, starting handshake.");
 
-        client.State = LimeClientState.Handshaking;
+        var endpoint = limeClient.Socket.RemoteEndPoint as IPEndPoint;
+        if (endpoint is null)
+        {
+            await limeClient.DisconnectAsync("An internal error occured.");
+            return;
+        }
 
-        await SendHandshakeAsync(client);
-        await ListenForDataAsync(client);
+        logger.LogInformation($"Client '{limeClient.Socket.RemoteEndPoint}' connected, starting handshake.");
+
+        limeClient.State = LimeClientState.Handshaking;
+
+        await SendHandshakeAsync(limeClient);
+        await ListenForDataAsync(limeClient);
+    }
+
+    private X509Certificate2? GetCertificate()
+    {
+        var certs = new X509Store(StoreName.My, StoreLocation.CurrentUser, OpenFlags.ReadOnly).Certificates;
+        var cert = certs.FirstOrDefault(c => c.IssuerName.Name == "localhost");
+
+        return cert;
+    }
+
+    private async Task<bool> AuthenticateAsync(LimeClient client)
+    {
+        try
+        {
+            X509Certificate2? cert = GetCertificate();
+            if(cert is null)
+            {
+                logger.LogCritical($"Failed to authenticate client '{client.Socket.RemoteEndPoint}': No certificate was found in My store for CurrentUser.");
+                return false;
+            }
+
+            await client.Stream.AuthenticateAsServerAsync(cert, false, SslProtocols.Tls13, true);
+
+            return true;
+        }
+        catch(Exception ex)
+        {
+            logger.LogCritical($"Failed to authenticate client '{client.Socket.RemoteEndPoint}': {ex.Message}");
+            return false;
+        }
     }
 
     private async Task SendHandshakeAsync(LimeClient client)
