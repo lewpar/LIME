@@ -34,6 +34,8 @@ public partial class LimeGateway : BackgroundService
     {
         _listener.Start();
 
+        logger.LogInformation("Listener started, waiting for agents to connect..");
+
         await AcceptConnectionsAsync(stoppingToken);
     }
 
@@ -64,7 +66,7 @@ public partial class LimeGateway : BackgroundService
             return;
         }
 
-        logger.LogInformation($"Client '{client.Socket.RemoteEndPoint}' connected.");
+        logger.LogInformation($"Client '{client.Socket.RemoteEndPoint}' connected, starting handshake.");
 
         client.State = LimeClientState.Handshaking;
 
@@ -78,6 +80,8 @@ public partial class LimeGateway : BackgroundService
         handshakePacket.Data = Encoding.UTF8.GetBytes(client.Guid.ToString());
 
         await client.SendPacketAsync(handshakePacket);
+
+        logger.LogInformation($"Sent handshake to client {client.Socket.RemoteEndPoint}.");
     }
 
     private async Task ListenForDataAsync(LimeClient client)

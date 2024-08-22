@@ -36,25 +36,22 @@ internal class LimeHeartbeat : BackgroundService
         {
             await client.SendPacketAsync(packet);
 
-            var responseTask = client.ReadPacketAsync(LimePacketType.CMSG_HEARTBEAT);
+            var responseTask = client.Stream.ReadPacketTypeAsync();
 
             if(await Task.WhenAny(responseTask, Task.Delay(15000)) == responseTask)
             {
                 var responsePacket = await responseTask;
 
-                if(responsePacket is null)
+                if(responsePacket != LimePacketType.CMSG_HEARTBEAT)
                 {
                     await SendDisconnectAsync(client);
                     return;
                 }
 
-                if(responsePacket.Type != LimePacketType.CMSG_HEARTBEAT)
-                {
-                    await SendDisconnectAsync(client);
-                    return;
-                }
+                var responseLen = await client.Stream.ReadIntAsync();
+                var responseData = await client.Stream.ReadBytesAsync(responseLen);
 
-                if(responsePacket.Data is null || !responsePacket.Data.SequenceEqual(msg))
+                if(responseData is null || !responseData.SequenceEqual(msg))
                 {
                     await SendDisconnectAsync(client);
                     return;

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 using System.Net.Sockets;
+using System.Text;
 
 namespace LIME.Agent.Windows.Services;
 
@@ -34,7 +35,6 @@ internal class LimeAgent : IHostedService
 
         if(!await TryHandshakeAsync())
         {
-            // TODO: Disconnect
             return;
         }
     }
@@ -66,6 +66,16 @@ internal class LimeAgent : IHostedService
                 logger.LogCritical($"Received unexpected packet type '{packetType}' from server, expected '{LimePacketType.SMSG_HANDSHAKE}'.");
                 return false;
             }
+
+            var msgLen = await stream.ReadIntAsync();
+            var msg = Encoding.UTF8.GetString(await stream.ReadBytesAsync(msgLen));
+
+            logger.LogInformation($"Got message: {msg}");
+
+            var packet = new LimePacket(LimePacketType.CMSG_HANDSHAKE);
+            packet.Data = Encoding.UTF8.GetBytes(msg);
+
+            await stream.WriteBytesAsync(packet.Build());
 
             logger.LogInformation("Handshake succeeded.");
         }
