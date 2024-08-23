@@ -10,7 +10,6 @@ public class LimeDbContext : DbContext
     private readonly IConfiguration config;
 
     public DbSet<Agent> Agents { get; set; }
-    public DbSet<AgentPending> AgentsPending { get; set; }
 
     public LimeDbContext(DbContextOptions options,
         ILogger<LimeDbContext> logger, IConfiguration config) : base(options)

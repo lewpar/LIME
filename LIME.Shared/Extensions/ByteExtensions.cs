@@ -15,4 +15,9 @@ public static class ByteExtensions
 
         return sb.ToString();
     }
+
+    public static string ToBase64String(this byte[] bytes)
+    {
+        return Convert.ToBase64String(bytes);
+    }
 }

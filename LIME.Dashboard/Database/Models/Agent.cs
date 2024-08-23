@@ -17,7 +17,7 @@ public class Agent
     [Column("address")]
     public string? Address { get; set; }
 
-    [Column("activated")]
-    public bool Activated { get; set; }
+    [Column("key")]
+    public string? Key { get; set; }
 }
 

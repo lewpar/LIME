@@ -2,8 +2,8 @@
 using LIME.Mediator.Services;
 
 using LIME.Shared.Crypto;
+using LIME.Shared.Extensions;
 
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
