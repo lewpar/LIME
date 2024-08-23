@@ -1,0 +1,5 @@
+﻿{
+  "MediatorBindAddress": "0.0.0.0",
+  "MediatorListenPort": 55123,
+  "CertificateThumbprint": ""
+}

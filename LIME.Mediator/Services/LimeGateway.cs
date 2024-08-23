@@ -2,6 +2,7 @@
 using LIME.Mediator.Models;
 using LIME.Mediator.Network;
 
+using LIME.Shared.Crypto;
 using LIME.Shared.Extensions;
 using LIME.Shared.Network;
 
@@ -27,7 +28,7 @@ public partial class LimeGateway : BackgroundService
     {
         this.logger = logger;
 
-        _listener = new TcpListener(config.MediatorBindAddress, config.MediatorListenPort);
+        _listener = new TcpListener(IPAddress.Parse(config.MediatorBindAddress), config.MediatorListenPort);
 
         packetHandlers = new Dictionary<LimePacketType, Func<LimeClient, SslStream, Task>>()
         {
@@ -85,22 +86,14 @@ public partial class LimeGateway : BackgroundService
         await ListenForDataAsync(limeClient);
     }
 
-    private X509Certificate2? GetCertificate()
-    {
-        var certs = new X509Store(StoreName.My, StoreLocation.CurrentUser, OpenFlags.ReadOnly).Certificates;
-        var cert = certs.FirstOrDefault(c => c.IssuerName.Name == "localhost");
-
-        return cert;
-    }
-
     private async Task<bool> AuthenticateAsync(LimeClient client)
     {
         try
         {
-            X509Certificate2? cert = GetCertificate();
+            X509Certificate2? cert = LimeCertificate.GetCertificate("localhost");
             if(cert is null)
             {
-                logger.LogCritical($"Failed to authenticate client '{client.Socket.RemoteEndPoint}': No certificate was found in My store for CurrentUser.");
+                logger.LogCritical($"Failed to authenticate client '{client.Socket.RemoteEndPoint}': No valid certificate was found in My store for CurrentUser.");
                 return false;
             }
 

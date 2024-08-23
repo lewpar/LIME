@@ -1,6 +1,8 @@
 ﻿using LIME.Mediator.Configuration;
 using LIME.Mediator.Services;
 
+using LIME.Shared.Crypto;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -13,32 +15,41 @@ namespace LIME.Mediator
         {
             var builder = Host.CreateApplicationBuilder(args);
 
-            builder.Configuration.AddJsonFile(@"./appsettings.json");
-
-            ConfigureServices(builder.Services);
+            await ConfigureServicesAsync(builder.Services);
 
             var app = builder.Build();
-
-            var config = app.Services.GetService<IConfiguration>();
-            var limeConfig = app.Services.GetService<LimeMediatorConfig>();
-
-            if (config is null || limeConfig is null)
-            {
-                return;
-            }
-
-            config.Bind(limeConfig);
 
             await app.RunAsync();
         }
 
-        static void ConfigureServices(IServiceCollection services)
+        static async Task ConfigureServicesAsync(IServiceCollection services)
         {
-            services.AddSingleton<LimeMediatorConfig>();
+            await ConfigureConfigAsync(services);
 
             services.AddSingleton<LimeMediator>();
             services.AddHostedService<LimeGateway>();
             services.AddHostedService<LimeHeartbeat>();
+        }
+
+        static async Task ConfigureConfigAsync(IServiceCollection services)
+        {
+            var config = await LimeMediatorConfig.LoadAsync();
+            if(config is null)
+            {
+                config = new LimeMediatorConfig();
+                await config.SaveAsync();
+            }
+
+            if(string.IsNullOrEmpty(config.CertificateThumbprint))
+            {
+                var cert = LimeCertificate.CreateCertificate();
+                LimeCertificate.StoreCertificate(cert);
+
+                config.CertificateThumbprint = cert.Thumbprint;
+                await config.SaveAsync();
+            }
+
+            services.AddSingleton<LimeMediatorConfig>(config);
         }
     }
 }

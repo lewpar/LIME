@@ -1,15 +1,33 @@
-﻿using System.Net;
+﻿using System.Text.Json;
 
 namespace LIME.Mediator.Configuration;
 
 public class LimeMediatorConfig
 {
-    public IPAddress MediatorBindAddress { get; set; }
+    public const string PATH = "./mediator.json";
+
+    public string MediatorBindAddress { get; set; }
     public int MediatorListenPort { get; set; }
+
+    public string CertificateThumbprint { get; set; }
 
     public LimeMediatorConfig()
     {
-        MediatorBindAddress = IPAddress.Parse("0.0.0.0");
+        MediatorBindAddress = "0.0.0.0";
         MediatorListenPort = 55123;
+
+        CertificateThumbprint = string.Empty;
+    }
+
+    public async Task SaveAsync()
+    {
+        using var fs = File.OpenWrite(PATH);
+        await JsonSerializer.SerializeAsync(fs, this);
+    }
+
+    public static async Task<LimeMediatorConfig?> LoadAsync()
+    {
+        using var fs = File.OpenRead(PATH);
+        return await JsonSerializer.DeserializeAsync<LimeMediatorConfig>(fs);
     }
 }
