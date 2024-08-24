@@ -82,7 +82,8 @@ public partial class LimeGateway : BackgroundService
 
         limeClient.State = LimeClientState.Handshaking;
 
-        await SendHandshakeAsync(limeClient);
+        await SendHandshakeAsync(limeClient, limeClient.Stream);
+
         await ListenForDataAsync(limeClient);
     }
 
@@ -106,13 +107,6 @@ public partial class LimeGateway : BackgroundService
             logger.LogCritical($"Failed to authenticate client '{client.Socket.RemoteEndPoint}': {ex.Message}");
             return false;
         }
-    }
-
-    private async Task SendHandshakeAsync(LimeClient client)
-    {
-        await client.SendPacketAsync(new HandshakePacket(client.Guid.ToString()));
-
-        logger.LogInformation($"Sent handshake to client {client.Socket.RemoteEndPoint}.");
     }
 
     private async Task ListenForDataAsync(LimeClient client)

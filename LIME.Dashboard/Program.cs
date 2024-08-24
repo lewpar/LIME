@@ -1,16 +1,17 @@
 namespace LIME.Dashboard;
 
+using LIME.Dashboard.Configuration;
 using LIME.Dashboard.Database;
 
 using Microsoft.EntityFrameworkCore;
 
 class Program
 {
-    static void Main(string[] args)
+    static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        ConfigureServices(builder.Services);
+        await ConfigureServicesAsync(builder.Services);
 
         var app = builder.Build();
 
@@ -19,12 +20,26 @@ class Program
         app.Run();
     }
 
-    static void ConfigureServices(IServiceCollection services)
+    static async Task ConfigureServicesAsync(IServiceCollection services)
     {
+        await ConfigureConfigAsync(services);
+
         services.AddDbContext<LimeDbContext>();
 
         services.AddControllers();
         services.AddRazorPages();
+    }
+
+    static async Task ConfigureConfigAsync(IServiceCollection services)
+    {
+        var config = await LimeDashboardConfig.LoadAsync();
+        if (config is null)
+        {
+            config = new LimeDashboardConfig();
+            await config.SaveAsync();
+        }
+
+        services.AddSingleton<LimeDashboardConfig>(config);
     }
 
     static void ConfigureMiddleware(WebApplication app)

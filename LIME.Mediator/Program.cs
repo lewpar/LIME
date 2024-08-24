@@ -1,8 +1,8 @@
-﻿using LIME.Mediator.Configuration;
+﻿using LIME.Dashboard.Database;
+using LIME.Mediator.Configuration;
 using LIME.Mediator.Services;
 
 using LIME.Shared.Crypto;
-using LIME.Shared.Extensions;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -25,6 +25,8 @@ namespace LIME.Mediator
         static async Task ConfigureServicesAsync(IServiceCollection services)
         {
             await ConfigureConfigAsync(services);
+
+            services.AddDbContext<LimeDbContext>();
 
             services.AddSingleton<LimeMediator>();
             services.AddHostedService<LimeGateway>();

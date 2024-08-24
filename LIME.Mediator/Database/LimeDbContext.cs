@@ -1,6 +1,6 @@
 ﻿namespace LIME.Dashboard.Database;
 
-using LIME.Dashboard.Configuration;
+using LIME.Mediator.Configuration;
 using LIME.Shared.Database.Models;
 
 using Microsoft.EntityFrameworkCore;
@@ -9,12 +9,12 @@ using Microsoft.Extensions.Logging;
 public class LimeDbContext : DbContext
 {
     private readonly ILogger<LimeDbContext> logger;
-    private readonly LimeDashboardConfig config;
+    private readonly LimeMediatorConfig config;
 
     public DbSet<Agent> Agents { get; set; }
 
     public LimeDbContext(DbContextOptions options,
-        ILogger<LimeDbContext> logger, LimeDashboardConfig config) : base(options)
+        ILogger<LimeDbContext> logger, LimeMediatorConfig config) : base(options)
     {
         this.logger = logger;
         this.config = config;

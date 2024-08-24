@@ -1,4 +1,6 @@
-﻿using System.Text.Json;
+﻿using LIME.Shared.Database;
+
+using System.Text.Json;
 
 namespace LIME.Mediator.Configuration;
 
@@ -11,12 +13,22 @@ public class LimeMediatorConfig
 
     public string CertificateThumbprint { get; set; }
 
+    public MySqlSettings MySql { get; set; }
+
     public LimeMediatorConfig()
     {
         MediatorBindAddress = "0.0.0.0";
         MediatorListenPort = 55123;
 
         CertificateThumbprint = string.Empty;
+
+        MySql = new MySqlSettings()
+        {
+            Host = "localhost",
+            Database = "lime",
+            User = "root",
+            Pass = "root"
+        };
     }
 
     public async Task SaveAsync()

@@ -6,16 +6,16 @@ namespace LIME.Mediator.Network;
 
 public class HandshakePacket : ILimePacket
 {
-    private readonly string agentGuid;
+    private readonly string message;
 
-    public HandshakePacket(string agentGuid)
+    public HandshakePacket(string message)
     {
-        this.agentGuid = agentGuid;
+        this.message = message;
     }
 
     public byte[] Serialize()
     {
-        var data = Encoding.UTF8.GetBytes(agentGuid);
+        var data = Encoding.UTF8.GetBytes(message);
         var ms = new MemoryStream();
 
         ms.Write(BitConverter.GetBytes((int)LimePacketType.SMSG_HANDSHAKE));

@@ -10,6 +10,11 @@ namespace LIME.Mediator.Services;
 
 public partial class LimeGateway
 {
+    public async Task SendHandshakeAsync(LimeClient client, SslStream stream)
+    {
+        logger.LogInformation($"Sent handshake to client {client.Socket.RemoteEndPoint}.");
+    }
+
     public async Task HandleHandshakeAsync(LimeClient client, SslStream stream)
     {
         var length = await stream.ReadIntAsync();

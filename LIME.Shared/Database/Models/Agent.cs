@@ -1,4 +1,4 @@
-﻿namespace LIME.Dashboard.Database.Models;
+﻿namespace LIME.Shared.Database.Models;
 
 using Microsoft.EntityFrameworkCore;
 
