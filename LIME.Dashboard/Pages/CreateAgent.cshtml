@@ -1,0 +1,37 @@
+﻿@page
+@model LIME.Dashboard.Pages.CreateAgentModel
+@{
+    ViewData["Title"] = "Create agent";
+}
+
+
+<form method="POST" style="display: flex; flex-direction: column; gap: 0.5rem">
+    <div style="display: flex; flex-direction: column; gap: 0.25rem">
+        <label asp-for="Model.Name"></label>
+        <input asp-for="Model.Name"/>
+        <span asp-validation-for="Model.Name" class="text-danger"></span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 0.25rem">
+        <label asp-for="Model.IPAddress"></label>
+        <input asp-for="Model.IPAddress" />
+        <span asp-validation-for="Model.IPAddress" class="text-danger"></span>
+    </div>
+
+    <button type="submit">Create Agent</button>
+
+    @if(!string.IsNullOrWhiteSpace(this.Model.ErrorMessage))
+    {
+        <span class="text-danger">@this.Model.ErrorMessage</span>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(this.Model.StatusMessage))
+    {
+        <span class="text-info">@this.Model.StatusMessage</span>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(this.Model.PrivateKey))
+    {
+        <textarea>@this.Model.PrivateKey</textarea>
+    }
+</form>
