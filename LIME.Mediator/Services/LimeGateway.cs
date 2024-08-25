@@ -1,11 +1,11 @@
-﻿using LIME.Mediator.Configuration;
+﻿using LIME.Dashboard.Database;
+using LIME.Mediator.Configuration;
 using LIME.Mediator.Models;
-using LIME.Mediator.Network;
 
 using LIME.Shared.Crypto;
 using LIME.Shared.Extensions;
 using LIME.Shared.Network;
-
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -21,13 +21,13 @@ public partial class LimeGateway : BackgroundService
 {
     private TcpListener _listener;
     private readonly ILogger<LimeGateway> logger;
-
+    private readonly LimeDbContext dbContext;
     private Dictionary<LimePacketType, Func<LimeClient, SslStream, Task>> packetHandlers;
 
-    public LimeGateway(LimeMediatorConfig config, ILogger<LimeGateway> logger)
+    public LimeGateway(LimeMediatorConfig config, ILogger<LimeGateway> logger, LimeDbContext dbContext)
     {
         this.logger = logger;
-
+        this.dbContext = dbContext;
         _listener = new TcpListener(IPAddress.Parse(config.MediatorBindAddress), config.MediatorListenPort);
 
         packetHandlers = new Dictionary<LimePacketType, Func<LimeClient, SslStream, Task>>()
@@ -75,6 +75,13 @@ public partial class LimeGateway : BackgroundService
         if (endpoint is null)
         {
             await limeClient.DisconnectAsync("An internal error occured.");
+            return;
+        }
+
+        var agent = await dbContext.Agents.FirstOrDefaultAsync(a => a.Address == endpoint.Address.ToString());
+        if(agent is null)
+        {
+            await limeClient.DisconnectAsync("Unauthorized agent.");
             return;
         }
 
