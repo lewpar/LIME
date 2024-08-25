@@ -33,8 +33,13 @@ public class LimeMediatorConfig
 
     public async Task SaveAsync()
     {
+        File.Delete(PATH);
+
         using var fs = File.OpenWrite(PATH);
-        await JsonSerializer.SerializeAsync(fs, this);
+        await JsonSerializer.SerializeAsync(fs, this, new JsonSerializerOptions()
+        {
+            WriteIndented = true
+        });
     }
 
     public static async Task<LimeMediatorConfig?> LoadAsync()

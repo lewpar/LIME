@@ -20,12 +20,14 @@ namespace LIME.Mediator.Services;
 public partial class LimeGateway : BackgroundService
 {
     private TcpListener _listener;
+    private readonly LimeMediatorConfig config;
     private readonly ILogger<LimeGateway> logger;
     private readonly LimeDbContext dbContext;
     private Dictionary<LimePacketType, Func<LimeClient, SslStream, Task>> packetHandlers;
 
     public LimeGateway(LimeMediatorConfig config, ILogger<LimeGateway> logger, LimeDbContext dbContext)
     {
+        this.config = config;
         this.logger = logger;
         this.dbContext = dbContext;
         _listener = new TcpListener(IPAddress.Parse(config.MediatorBindAddress), config.MediatorListenPort);
@@ -98,7 +100,7 @@ public partial class LimeGateway : BackgroundService
     {
         try
         {
-            X509Certificate2? cert = LimeCertificate.GetCertificate("localhost");
+            X509Certificate2? cert = LimeCertificate.GetCertificate(config.CertificateThumbprint);
             if(cert is null)
             {
                 logger.LogCritical($"Failed to authenticate client '{client.Socket.RemoteEndPoint}': No valid certificate was found in My store for CurrentUser.");

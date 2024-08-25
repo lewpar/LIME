@@ -46,7 +46,7 @@ public class LimeCertificate
 
         var certificate = request.CreateSelfSigned(DateTimeOffset.Now, DateTimeOffset.Now.AddYears(1));
 
-        return certificate;
+        return new X509Certificate2(certificate.Export(X509ContentType.Pfx));
     }
 
     public static void StoreCertificate(X509Certificate2 cert)
