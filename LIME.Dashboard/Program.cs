@@ -2,7 +2,7 @@ namespace LIME.Dashboard;
 
 using LIME.Dashboard.Configuration;
 using LIME.Dashboard.Database;
-
+using LIME.Shared.Configuration;
 using Microsoft.EntityFrameworkCore;
 
 class Program
@@ -10,6 +10,8 @@ class Program
     static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+
+        await DotEnv.LoadAsync(Environment.CurrentDirectory);
 
         await ConfigureServicesAsync(builder.Services);
 

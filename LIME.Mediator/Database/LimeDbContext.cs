@@ -22,7 +22,12 @@ public class LimeDbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder builder)
     {
-        string connectionString = $"Server={config.MySql.Host};Database={config.MySql.Database};Uid={config.MySql.User};Pwd={config.MySql.Pass};";
+        var connectionString = Environment.GetEnvironmentVariable("MYSQL_CONNECTION", EnvironmentVariableTarget.Process);
+        if(string.IsNullOrWhiteSpace(connectionString))
+        {
+            logger.LogCritical("Failed to get MySql connection string from MYSQL_CONNECTION environment variable.");
+            return;
+        }
 
         ServerVersion? mySqlVersion = ServerVersion.AutoDetect(connectionString);
         if (mySqlVersion is null)

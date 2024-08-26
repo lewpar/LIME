@@ -1,7 +1,7 @@
 ﻿using LIME.Dashboard.Database;
 using LIME.Mediator.Configuration;
 using LIME.Mediator.Services;
-
+using LIME.Shared.Configuration;
 using LIME.Shared.Crypto;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -14,6 +14,8 @@ internal class Program
     static async Task Main(string[] args)
     {
         var builder = Host.CreateApplicationBuilder(args);
+
+        await DotEnv.LoadAsync(Environment.CurrentDirectory);
 
         await ConfigureServicesAsync(builder.Services);
 
