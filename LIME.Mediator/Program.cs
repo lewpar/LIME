@@ -17,6 +17,8 @@ internal class Program
 
         await DotEnv.LoadAsync(Environment.CurrentDirectory);
 
+        DotEnv.Ensure("MYSQL_CONNECTION");
+
         await ConfigureServicesAsync(builder.Services);
 
         var app = builder.Build();

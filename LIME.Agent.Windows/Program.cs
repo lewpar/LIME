@@ -15,6 +15,8 @@ internal class Program
 
         await DotEnv.LoadAsync(Environment.CurrentDirectory);
 
+        DotEnv.Ensure("LIME_AGENT_PRIVATE_KEY");
+
         await ConfigureServicesAsync(builder.Services);
 
         var app = builder.Build();

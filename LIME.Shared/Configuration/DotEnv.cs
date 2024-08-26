@@ -6,6 +6,11 @@ public class DotEnv
     {
         path = Path.Combine(path, ".env");
 
+        if(!File.Exists(path))
+        {
+            return;
+        }
+
         var lines = File.ReadAllLines(path);
         EnumerateAndSetVariables(lines);
     }
@@ -13,6 +18,11 @@ public class DotEnv
     public static async Task LoadAsync(string path)
     {
         path = Path.Combine(path, ".env");
+
+        if (!File.Exists(path))
+        {
+            return;
+        }
 
         var lines = await File.ReadAllLinesAsync(path);
         EnumerateAndSetVariables(lines);
@@ -29,6 +39,15 @@ public class DotEnv
             }
 
             Environment.SetEnvironmentVariable(sections[0], sections[1], EnvironmentVariableTarget.Process);
+        }
+    }
+
+    public static void Ensure(string environmentVariable, EnvironmentVariableTarget target = EnvironmentVariableTarget.Process)
+    {
+        var ev = Environment.GetEnvironmentVariable(environmentVariable);
+        if(ev is null)
+        {
+            throw new Exception($"Environment variable '{environmentVariable}' is required but it was not found.");
         }
     }
 }
