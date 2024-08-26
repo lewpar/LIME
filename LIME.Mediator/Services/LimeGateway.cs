@@ -1,10 +1,10 @@
 ﻿using LIME.Dashboard.Database;
 using LIME.Mediator.Configuration;
 using LIME.Mediator.Models;
-
+using LIME.Mediator.Network;
 using LIME.Shared.Crypto;
 using LIME.Shared.Extensions;
-using LIME.Shared.Network;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -14,6 +14,7 @@ using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 
 namespace LIME.Mediator.Services;
 
@@ -23,19 +24,16 @@ public partial class LimeGateway : BackgroundService
     private readonly LimeMediatorConfig config;
     private readonly ILogger<LimeGateway> logger;
     private readonly LimeDbContext dbContext;
-    private Dictionary<LimePacketType, Func<LimeClient, SslStream, Task>> packetHandlers;
+    private readonly LimeMediator mediator;
 
-    public LimeGateway(LimeMediatorConfig config, ILogger<LimeGateway> logger, LimeDbContext dbContext)
+    public LimeGateway(LimeMediatorConfig config, ILogger<LimeGateway> logger, 
+        LimeDbContext dbContext, LimeMediator mediator)
     {
         this.config = config;
         this.logger = logger;
         this.dbContext = dbContext;
+        this.mediator = mediator;
         _listener = new TcpListener(IPAddress.Parse(config.MediatorBindAddress), config.MediatorListenPort);
-
-        packetHandlers = new Dictionary<LimePacketType, Func<LimeClient, SslStream, Task>>()
-        {
-            { LimePacketType.CMSG_HANDSHAKE, HandleHandshakeAsync }
-        };
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -60,10 +58,9 @@ public partial class LimeGateway : BackgroundService
     {
         try
         {
-            var limeClient = new LimeClient()
+            var limeClient = new LimeClient(client)
             {
                 Guid = Guid.NewGuid(),
-                Socket = client.Client,
                 Stream = new SslStream(client.GetStream(), false),
                 State = LimeClientState.Connecting
             };
@@ -101,9 +98,8 @@ public partial class LimeGateway : BackgroundService
 
             limeClient.State = LimeClientState.Handshaking;
 
-            await SendHandshakeAsync(limeClient, limeClient.Stream);
-
-            await ListenForDataAsync(limeClient);
+            await SendHandshakeAsync(limeClient);
+            await HandleHandshakeAsync(limeClient);
         }
         catch(Exception ex)
         {
@@ -133,22 +129,54 @@ public partial class LimeGateway : BackgroundService
         }
     }
 
-    private async Task ListenForDataAsync(LimeClient client)
+    public async Task SendHandshakeAsync(LimeClient client)
     {
-        while(true)
+        if (client.PublicKey is null)
         {
-            var packetType = await client.Stream.ReadPacketTypeAsync();
-            
-            if(!packetHandlers.ContainsKey(packetType))
-            {
-                logger.LogWarning($"Client '{client.Socket.RemoteEndPoint}' sent unknown packet type '{packetType}', disconnecting..");
-                await client.DisconnectAsync("Invalid packet.");
-                return;
-            }
-
-            var handler = packetHandlers[packetType];
-
-            await handler.Invoke(client, client.Stream);
+            return;
         }
+
+        var stream = client.Stream;
+
+        using var rsa = client.PublicKey.ToRSACryptoProvider();
+
+        var data = Encoding.UTF8.GetBytes(client.Guid.ToString());
+        var encryptedData = rsa.Encrypt(data, false);
+
+        var handshake = new HandshakePacket(encryptedData);
+        await stream.WriteBytesAsync(handshake.Serialize());
+
+        logger.LogInformation($"Sent handshake to client {client.Socket.RemoteEndPoint}.");
+    }
+
+    public async Task HandleHandshakeAsync(LimeClient client)
+    {
+        var stream = client.Stream;
+
+        var packetType = await client.Stream.ReadPacketTypeAsync();
+        if(packetType != Shared.Network.LimePacketType.CMSG_HANDSHAKE)
+        {
+            await client.DisconnectAsync("Invalid packet.");
+            return;
+        }
+
+        var length = await stream.ReadIntAsync();
+        var data = await stream.ReadBytesAsync(length);
+        var message = Encoding.UTF8.GetString(data);
+        var expectedMsg = client.Guid.ToString();
+
+        if (message != expectedMsg)
+        {
+            logger.LogWarning($"Client '{client.Socket.RemoteEndPoint}' send invalid handshake message '{message}', expected '{expectedMsg}'.");
+            await client.DisconnectAsync("Invalid handshake message.");
+            return;
+        }
+
+        client.State = LimeClientState.Connected;
+
+        logger.LogInformation($"Client {client.Socket.RemoteEndPoint} passed handshake.");
+
+        mediator.ConnectedClients.Add(client);
+        _ = mediator.ListenForDataAsync(client);
     }
 }

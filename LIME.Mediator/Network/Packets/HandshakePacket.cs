@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-using LIME.Shared.Network;
+﻿using LIME.Shared.Network;
 
 namespace LIME.Mediator.Network;
 

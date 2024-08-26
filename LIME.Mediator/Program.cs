@@ -34,7 +34,6 @@ internal class Program
 
         services.AddSingleton<LimeMediator>();
         services.AddHostedService<LimeGateway>();
-        services.AddHostedService<LimeHeartbeat>();
     }
 
     static async Task ConfigureConfigAsync(IServiceCollection services)
