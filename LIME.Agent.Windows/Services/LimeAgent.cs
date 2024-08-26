@@ -1,6 +1,6 @@
 ﻿using LIME.Agent.Windows.Configuration;
 using LIME.Agent.Windows.Network;
-
+using LIME.Shared.Crypto;
 using LIME.Shared.Extensions;
 using LIME.Shared.Network;
 
@@ -10,12 +10,13 @@ using Microsoft.Extensions.Logging;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Authentication;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 namespace LIME.Agent.Windows.Services;
 
-internal class LimeAgent : IHostedService
+internal partial class LimeAgent : IHostedService
 {
     private readonly ILogger<LimeAgent> logger;
     private readonly LimeAgentConfig config;
@@ -98,7 +99,18 @@ internal class LimeAgent : IHostedService
             }
 
             var msgLen = await stream.ReadIntAsync();
-            var msg = Encoding.UTF8.GetString(await stream.ReadBytesAsync(msgLen));
+            var msgEncrypted = await stream.ReadBytesAsync(msgLen);
+
+            var privateKey = Environment.GetEnvironmentVariable("LIME_AGENT_PRIVATE_KEY", EnvironmentVariableTarget.Process);
+            if(string.IsNullOrWhiteSpace(privateKey))
+            {
+                logger.LogCritical("Failed to get agent private key.");
+                return false;
+            }
+
+            using var rsa = new RSACryptoServiceProvider(RSAKeypair.KEY_SIZE);
+            rsa.FromXmlString(privateKey.FromBase64());
+            var msg = Encoding.UTF8.GetString(rsa.Decrypt(msgEncrypted, false));
 
             logger.LogInformation($"Got message: {msg}");
 

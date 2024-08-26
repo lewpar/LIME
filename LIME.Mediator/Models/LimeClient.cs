@@ -4,6 +4,7 @@ using LIME.Shared.Network;
 
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 
 namespace LIME.Mediator.Models;
 
@@ -15,6 +16,8 @@ public class LimeClient
     public required SslStream Stream { get; set; }
 
     public required Guid Guid { get; set; }
+
+    public string? PublicKey { get; set; }
 
     public LimeClient() { }
 

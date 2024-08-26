@@ -54,4 +54,9 @@ public class LimeCertificate
         var store = new X509Store(StoreName.My, StoreLocation.CurrentUser, OpenFlags.ReadWrite);
         store.Add(cert);
     }
+
+    public static X509Certificate2 GetCertificateFromBase64(string base64)
+    {
+        return new X509Certificate2(Convert.FromBase64String(base64));
+    }
 }

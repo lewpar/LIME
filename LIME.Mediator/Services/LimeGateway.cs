@@ -58,42 +58,57 @@ public partial class LimeGateway : BackgroundService
 
     private async Task HandleAcceptConnectionAsync(TcpClient client)
     {
-        var limeClient = new LimeClient()
+        try
         {
-            Guid = Guid.NewGuid(),
-            Socket = client.Client,
-            Stream = new SslStream(client.GetStream(), false),
-            State = LimeClientState.Connecting
-        };
+            var limeClient = new LimeClient()
+            {
+                Guid = Guid.NewGuid(),
+                Socket = client.Client,
+                Stream = new SslStream(client.GetStream(), false),
+                State = LimeClientState.Connecting
+            };
 
-        if(!await AuthenticateAsync(limeClient))
-        {
-            await limeClient.DisconnectAsync("Failed authentication.");
-            return;
+            if (!await AuthenticateAsync(limeClient))
+            {
+                await limeClient.DisconnectAsync("Failed authentication.");
+                return;
+            }
+
+            var endpoint = limeClient.Socket.RemoteEndPoint as IPEndPoint;
+            if (endpoint is null)
+            {
+                await limeClient.DisconnectAsync("An internal error occured.");
+                return;
+            }
+
+            var agent = await dbContext.Agents.FirstOrDefaultAsync(a => a.Address == endpoint.Address.ToString());
+            if (agent is null)
+            {
+                await limeClient.DisconnectAsync("Unauthorized agent.");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(agent.Key))
+            {
+                logger.LogCritical($"Client '{limeClient.Socket.RemoteEndPoint}' is missing public key.");
+                await limeClient.DisconnectAsync("Missing public key.");
+                return;
+            }
+
+            limeClient.PublicKey = agent.Key;
+
+            logger.LogInformation($"Client '{limeClient.Socket.RemoteEndPoint}' connected, starting handshake.");
+
+            limeClient.State = LimeClientState.Handshaking;
+
+            await SendHandshakeAsync(limeClient, limeClient.Stream);
+
+            await ListenForDataAsync(limeClient);
         }
-
-
-        var endpoint = limeClient.Socket.RemoteEndPoint as IPEndPoint;
-        if (endpoint is null)
+        catch(Exception ex)
         {
-            await limeClient.DisconnectAsync("An internal error occured.");
-            return;
+            logger.LogCritical($"{ex.Message}: {ex.StackTrace}");
         }
-
-        var agent = await dbContext.Agents.FirstOrDefaultAsync(a => a.Address == endpoint.Address.ToString());
-        if(agent is null)
-        {
-            await limeClient.DisconnectAsync("Unauthorized agent.");
-            return;
-        }
-
-        logger.LogInformation($"Client '{limeClient.Socket.RemoteEndPoint}' connected, starting handshake.");
-
-        limeClient.State = LimeClientState.Handshaking;
-
-        await SendHandshakeAsync(limeClient, limeClient.Stream);
-
-        await ListenForDataAsync(limeClient);
     }
 
     private async Task<bool> AuthenticateAsync(LimeClient client)
@@ -103,7 +118,7 @@ public partial class LimeGateway : BackgroundService
             X509Certificate2? cert = LimeCertificate.GetCertificate(config.CertificateThumbprint);
             if(cert is null)
             {
-                logger.LogCritical($"Failed to authenticate client '{client.Socket.RemoteEndPoint}': No valid certificate was found in My store for CurrentUser.");
+                logger.LogCritical($"Failed to authenticate client '{client.Socket.RemoteEndPoint}': No valid server certificate was found in My store for CurrentUser.");
                 return false;
             }
 

@@ -1,6 +1,6 @@
 ﻿using LIME.Agent.Windows.Configuration;
 using LIME.Agent.Windows.Services;
-
+using LIME.Shared.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -13,9 +13,9 @@ internal class Program
     {
         var builder = Host.CreateApplicationBuilder();
 
-        builder.Configuration.AddJsonFile(@"./appsettings.json");
+        await DotEnv.LoadAsync(Environment.CurrentDirectory);
 
-        ConfigureServices(builder.Services);
+        await ConfigureServicesAsync(builder.Services);
 
         var app = builder.Build();
 
@@ -32,9 +32,23 @@ internal class Program
         await app.RunAsync();
     }
 
-    private static void ConfigureServices(IServiceCollection services)
+    private static async Task ConfigureServicesAsync(IServiceCollection services)
     {
+        await ConfigureConfigAsync(services);
+
         services.AddHostedService<LimeAgent>();
         services.AddSingleton<LimeAgentConfig>();
+    }
+
+    static async Task ConfigureConfigAsync(IServiceCollection services)
+    {
+        var config = await LimeAgentConfig.LoadAsync();
+        if (config is null)
+        {
+            config = new LimeAgentConfig();
+            await config.SaveAsync();
+        }
+
+        services.AddSingleton<LimeAgentConfig>(config);
     }
 }
