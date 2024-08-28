@@ -36,7 +36,7 @@ internal class LimeServer
     private X509Certificate2 GetCertificate(string certificateThumbprint)
     {
         var cert = LimeCertificate.GetCertificate(certificateThumbprint);
-        if(cert is null)
+        if (cert is null)
         {
             throw new NullReferenceException($"No certificate was found with the thumbprint '{certificateThumbprint}'.");
         }
@@ -46,7 +46,7 @@ internal class LimeServer
 
     public async Task ListenAsync(CancellationToken cancellationToken)
     {
-        while(!cancellationToken.IsCancellationRequested)
+        while (!cancellationToken.IsCancellationRequested)
         {
             var client = await listener.AcceptTcpClientAsync();
             _ = HandleAcceptConnectionAsync(client);
@@ -75,7 +75,7 @@ internal class LimeServer
 
             return true;
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             ClientAuthenticationFailed?.Invoke(this, new ClientAuthenticationFailedEventArgs($"Failed to validate client certificate: {ex.Message}"));
             return false;

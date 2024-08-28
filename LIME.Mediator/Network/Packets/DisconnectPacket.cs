@@ -1,8 +1,7 @@
 ﻿using System.Text;
-
 using LIME.Shared.Network;
 
-namespace LIME.Mediator.Network;
+namespace LIME.Mediator.Network.Packets;
 
 public class DisconnectPacket : ILimePacket
 {

@@ -1,11 +1,12 @@
-﻿using LIME.Dashboard.Database;
-using LIME.Mediator.Configuration;
+﻿using LIME.Mediator.Configuration;
+using LIME.Mediator.Database;
 using LIME.Mediator.Services;
+
 using LIME.Shared.Configuration;
 using LIME.Shared.Crypto;
 using LIME.Shared.Extensions;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+
+using Microsoft.EntityFrameworkCore;
 
 namespace LIME.Mediator;
 
@@ -13,7 +14,7 @@ internal class Program
 {
     static async Task Main(string[] args)
     {
-        var builder = Host.CreateApplicationBuilder(args);
+        var builder = WebApplication.CreateBuilder(args);
 
         await DotEnv.LoadAsync(Environment.CurrentDirectory);
 
@@ -23,11 +24,15 @@ internal class Program
 
         var app = builder.Build();
 
+        ConfigureMiddleware(app);
+
         await app.RunAsync();
     }
 
     static async Task ConfigureServicesAsync(IServiceCollection services)
     {
+        services.AddRazorPages();
+
         await ConfigureConfigAsync(services);
 
         services.AddDbContext<LimeDbContext>();
@@ -83,5 +88,30 @@ internal class Program
 
         ConsoleHelper.RequestEnter();
         Console.Clear();
+    }
+
+    static void ConfigureMiddleware(WebApplication app)
+    {
+        if (!app.Environment.IsDevelopment())
+        {
+            app.UseExceptionHandler("/Error");
+        }
+
+        RunDatabaseMigrations(app);
+
+        app.UseStaticFiles();
+
+        app.UseRouting();
+
+        app.MapRazorPages();
+    }
+
+    static void RunDatabaseMigrations(WebApplication app)
+    {
+        using (var scope = app.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<LimeDbContext>();
+            dbContext.Database.Migrate();
+        }
     }
 }

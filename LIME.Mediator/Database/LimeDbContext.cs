@@ -1,4 +1,4 @@
-﻿namespace LIME.Dashboard.Database;
+﻿namespace LIME.Mediator.Database;
 
 using LIME.Mediator.Configuration;
 using LIME.Shared.Database.Models;

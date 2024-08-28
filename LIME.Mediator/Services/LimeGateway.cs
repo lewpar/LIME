@@ -1,19 +1,19 @@
-﻿using LIME.Dashboard.Database;
+﻿using LIME.Mediator.Database;
 using LIME.Mediator.Configuration;
 using LIME.Mediator.Models;
-using LIME.Mediator.Network;
+
 using LIME.Shared.Crypto;
 using LIME.Shared.Extensions;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
+
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
+
 using System.Text;
 
 namespace LIME.Mediator.Services;
@@ -23,15 +23,15 @@ public partial class LimeGateway : BackgroundService
     private TcpListener _listener;
     private readonly LimeMediatorConfig config;
     private readonly ILogger<LimeGateway> logger;
-    private readonly LimeDbContext dbContext;
+    private readonly IServiceProvider serviceProvider;
     private readonly LimeMediator mediator;
 
-    public LimeGateway(LimeMediatorConfig config, ILogger<LimeGateway> logger, 
-        LimeDbContext dbContext, LimeMediator mediator)
+    public LimeGateway(LimeMediatorConfig config, ILogger<LimeGateway> logger,
+        IServiceProvider serviceProvider, LimeMediator mediator)
     {
         this.config = config;
         this.logger = logger;
-        this.dbContext = dbContext;
+        this.serviceProvider = serviceProvider;
         this.mediator = mediator;
         _listener = new TcpListener(IPAddress.Parse(config.MediatorBindAddress), config.MediatorListenPort);
     }
@@ -78,6 +78,16 @@ public partial class LimeGateway : BackgroundService
                 return;
             }
 
+            var scope = serviceProvider.CreateAsyncScope();
+            var dbContext = scope.ServiceProvider.GetService<LimeDbContext>();
+
+            if(dbContext is null)
+            {
+                logger.LogCritical("Failed to get DbContext service while authenticating client.");
+                await limeClient.DisconnectAsync("An internal error occured.");
+                return;
+            }
+
             var agent = await dbContext.Agents.FirstOrDefaultAsync(a => a.Address == endpoint.Address.ToString());
             if (agent is null)
             {
@@ -99,7 +109,7 @@ public partial class LimeGateway : BackgroundService
             await SendHandshakeAsync(limeClient);
             await HandleHandshakeAsync(limeClient);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             logger.LogCritical($"{ex.Message}: {ex.StackTrace}");
         }
@@ -110,7 +120,7 @@ public partial class LimeGateway : BackgroundService
         try
         {
             X509Certificate2? cert = LimeCertificate.GetCertificate(config.Certificate.Thumbprint);
-            if(cert is null)
+            if (cert is null)
             {
                 logger.LogCritical($"Failed to authenticate client '{client.Socket.RemoteEndPoint}': No valid server certificate was found in My store for CurrentUser.");
                 return false;
@@ -120,7 +130,7 @@ public partial class LimeGateway : BackgroundService
 
             return true;
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             logger.LogCritical($"Failed to authenticate client '{client.Socket.RemoteEndPoint}': {ex.Message}");
             return false;
@@ -152,7 +162,7 @@ public partial class LimeGateway : BackgroundService
         var stream = client.Stream;
 
         var packetType = await client.Stream.ReadPacketTypeAsync();
-        if(packetType != Shared.Network.LimePacketType.CMSG_HANDSHAKE)
+        if (packetType != Shared.Network.LimePacketType.CMSG_HANDSHAKE)
         {
             await client.DisconnectAsync("Invalid packet.");
             return;
