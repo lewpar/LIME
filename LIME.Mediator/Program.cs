@@ -3,7 +3,7 @@ using LIME.Mediator.Configuration;
 using LIME.Mediator.Services;
 using LIME.Shared.Configuration;
 using LIME.Shared.Crypto;
-
+using LIME.Shared.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -45,15 +45,43 @@ internal class Program
             await config.SaveAsync();
         }
 
-        if(string.IsNullOrEmpty(config.CertificateThumbprint))
-        {
-            var cert = LimeCertificate.CreateCertificate();
-            LimeCertificate.StoreCertificate(cert);
-
-            config.CertificateThumbprint = cert.Thumbprint;
-            await config.SaveAsync();
-        }
+        await ConfigureCertificateAsync(config);
 
         services.AddSingleton<LimeMediatorConfig>(config);
+    }
+
+    static async Task ConfigureCertificateAsync(LimeMediatorConfig config)
+    {
+        if (!string.IsNullOrEmpty(config.Certificate.Thumbprint) &&
+            LimeCertificate.GetCertificate(config.Certificate.Thumbprint) is not null)
+        {
+            return;
+        }
+
+        var result = ConsoleHelper.RequestYesNo("No certificate is configured, would you like to create one?", "yes", "no");
+        if (result is null)
+        {
+            await ConfigureCertificateAsync(config);
+            return;
+        }
+
+        if(!result.Value)
+        {
+            Console.Clear();
+            return;
+        }
+
+        Console.WriteLine("Creating certificate..");
+
+        var cert = LimeCertificate.CreateRootCertificate(config.Certificate.Issuer);
+        LimeCertificate.StoreCertificate(cert);
+
+        Console.WriteLine($"Certificated created and stored with thumbprint '{cert.Thumbprint}'.");
+
+        config.Certificate.Thumbprint = cert.Thumbprint;
+        await config.SaveAsync();
+
+        ConsoleHelper.RequestEnter();
+        Console.Clear();
     }
 }

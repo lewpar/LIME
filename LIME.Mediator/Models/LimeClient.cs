@@ -16,8 +16,6 @@ public class LimeClient
 
     public required Guid Guid { get; set; }
 
-    public string? PublicKey { get; set; }
-
     public LimeClient(TcpClient client) 
     {
         this.Socket = client.Client;

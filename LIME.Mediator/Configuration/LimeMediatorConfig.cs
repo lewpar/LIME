@@ -1,4 +1,5 @@
-﻿using LIME.Shared.Database;
+﻿using LIME.Shared.Configuration;
+using LIME.Shared.Database;
 
 using System.Text.Json;
 
@@ -11,14 +12,14 @@ public class LimeMediatorConfig
     public string MediatorBindAddress { get; set; }
     public int MediatorListenPort { get; set; }
 
-    public string CertificateThumbprint { get; set; }
+    public CertificateIdentifier Certificate { get; set; }
 
     public LimeMediatorConfig()
     {
         MediatorBindAddress = "0.0.0.0";
         MediatorListenPort = 55123;
 
-        CertificateThumbprint = string.Empty;
+        Certificate = new CertificateIdentifier("LIME", "");
     }
 
     public async Task SaveAsync()

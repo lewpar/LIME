@@ -32,19 +32,44 @@ public class LimeCertificate
         return null;
     }
 
-    public static X509Certificate2 CreateCertificate()
+    public static X509Certificate2Collection GetCertificates()
+    {
+        var store = new X509Store(StoreName.My, StoreLocation.CurrentUser, OpenFlags.ReadOnly);
+        var certificates = store.Certificates;
+
+        if (certificates is null)
+        {
+            return new X509Certificate2Collection();
+        }
+
+        return certificates;
+    }
+
+    public static X509Certificate2 CreateRootCertificate(string issuer)
     {
         using var rsa = RSA.Create(2048);
 
-        var subject = new X500DistinguishedName("CN=LimeMediator");
+        var subject = new X500DistinguishedName($"CN={issuer}");
+
+        var request = new CertificateRequest(subject, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+
+        request.CertificateExtensions.Add(new X509BasicConstraintsExtension(true, false, 0, true));
+
+        var certificate = request.CreateSelfSigned(DateTimeOffset.Now, DateTimeOffset.Now.AddYears(1));
+
+        return new X509Certificate2(certificate.Export(X509ContentType.Pfx));
+    }
+
+    public static X509Certificate2 CreateIntermediateCertificate(X509Certificate2 issuer)
+    {
+        using var rsa = RSA.Create(2048);
+        var subject = new X500DistinguishedName("CN=LimeIntermediate");
 
         var request = new CertificateRequest(subject, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
         request.CertificateExtensions.Add(new X509BasicConstraintsExtension(false, false, 0, false));
-        request.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyEncipherment, false));
-        request.CertificateExtensions.Add(new X509SubjectKeyIdentifierExtension(request.PublicKey, false));
 
-        var certificate = request.CreateSelfSigned(DateTimeOffset.Now, DateTimeOffset.Now.AddYears(1));
+        var certificate = request.Create(issuer, DateTimeOffset.Now, DateTimeOffset.Now.AddYears(1), Guid.NewGuid().ToByteArray());
 
         return new X509Certificate2(certificate.Export(X509ContentType.Pfx));
     }

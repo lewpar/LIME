@@ -1,8 +1,1 @@
-﻿{
-  "MySql": {
-    "Host": "localhost",
-    "Database": "lime",
-    "User": "root",
-    "Pass": "root"
-  }
-}
+{"Certificate":{"Issuer":"LIME","Thumbprint":"11C8EE56B9CFC1961060AFE79C1AABE9E3823779"}}

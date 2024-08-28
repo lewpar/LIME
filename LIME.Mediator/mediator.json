@@ -1,11 +1,8 @@
 ﻿{
   "MediatorBindAddress": "0.0.0.0",
   "MediatorListenPort": 55123,
-  "CertificateThumbprint": "",
-  "MySql": {
-    "Host": "localhost",
-    "Database": "lime",
-    "User": "root",
-    "Pass": "root"
+  "Certificate": {
+    "Issuer": "LIME",
+    "Thumbprint": ""
   }
 }

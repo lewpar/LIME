@@ -92,8 +92,6 @@ public partial class LimeGateway : BackgroundService
                 return;
             }
 
-            limeClient.PublicKey = agent.Key;
-
             logger.LogInformation($"Client '{limeClient.Socket.RemoteEndPoint}' connected, starting handshake.");
 
             limeClient.State = LimeClientState.Handshaking;
@@ -111,7 +109,7 @@ public partial class LimeGateway : BackgroundService
     {
         try
         {
-            X509Certificate2? cert = LimeCertificate.GetCertificate(config.CertificateThumbprint);
+            X509Certificate2? cert = LimeCertificate.GetCertificate(config.Certificate.Thumbprint);
             if(cert is null)
             {
                 logger.LogCritical($"Failed to authenticate client '{client.Socket.RemoteEndPoint}': No valid server certificate was found in My store for CurrentUser.");
@@ -131,7 +129,7 @@ public partial class LimeGateway : BackgroundService
 
     public async Task SendHandshakeAsync(LimeClient client)
     {
-        if (client.PublicKey is null)
+        /*if (client.PublicKey is null)
         {
             return;
         }
@@ -146,7 +144,7 @@ public partial class LimeGateway : BackgroundService
         var handshake = new HandshakePacket(encryptedData);
         await stream.WriteBytesAsync(handshake.Serialize());
 
-        logger.LogInformation($"Sent handshake to client {client.Socket.RemoteEndPoint}.");
+        logger.LogInformation($"Sent handshake to client {client.Socket.RemoteEndPoint}.");*/
     }
 
     public async Task HandleHandshakeAsync(LimeClient client)
