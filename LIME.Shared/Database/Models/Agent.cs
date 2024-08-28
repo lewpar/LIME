@@ -16,8 +16,5 @@ public class Agent
 
     [Column("address")]
     public string? Address { get; set; }
-
-    [Column("key")]
-    public string? Key { get; set; }
 }
 

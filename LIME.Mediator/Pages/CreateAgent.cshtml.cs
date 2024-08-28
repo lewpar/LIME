@@ -1,3 +1,4 @@
+using LIME.Mediator.Configuration;
 using LIME.Mediator.Database;
 using LIME.Mediator.Pages.Models;
 
@@ -14,18 +15,18 @@ namespace LIME.Mediator.Pages;
 public class CreateAgentModel : PageModel
 {
     private readonly LimeDbContext dbContext;
+    private readonly LimeMediatorConfig config;
 
     public string StatusMessage { get; set; } = string.Empty;
     public string ErrorMessage { get; set; } = string.Empty;
 
-    public string PrivateKey { get; set; } = string.Empty;
-
     [BindProperty]
     public CreateAgentDto Model { get; set; } = default!;
 
-    public CreateAgentModel(LimeDbContext dbContext)
+    public CreateAgentModel(LimeDbContext dbContext, LimeMediatorConfig config)
     {
         this.dbContext = dbContext;
+        this.config = config;
     }
 
     public async Task<IActionResult> OnPostAsync()
@@ -35,6 +36,15 @@ public class CreateAgentModel : PageModel
             return Page();
         }
 
+        var rootCert = LimeCertificate.GetCertificate(config.Certificate.Thumbprint);
+        if (rootCert is null)
+        {
+            ErrorMessage = "An internal error occured, the agent was not created.";
+            return Page();
+        }
+
+        var agentCert = LimeCertificate.CreateIntermediateCertificate(rootCert);
+
         var existingAgent = await dbContext.Agents.FirstOrDefaultAsync(a => a.Address == Model.IPAddress);
         if(existingAgent is not null)
         {
@@ -42,13 +52,10 @@ public class CreateAgentModel : PageModel
             return Page();
         }
 
-        var keyPair = RSAKeypair.Generate();
-
         await dbContext.Agents.AddAsync(new Agent()
         {
             Address = Model.IPAddress,
-            Name = Model.Name,
-            Key = keyPair.PublicKey.ToBase64()
+            Name = Model.Name
         });
 
         var rows = await dbContext.SaveChangesAsync();
@@ -58,9 +65,8 @@ public class CreateAgentModel : PageModel
             return Page();
         }
 
-        StatusMessage = "Created agent. Save this private key on the agent to connect it to the mediator.";
-        PrivateKey = $"{keyPair.PrivateKey.ToBase64()}";
+        StatusMessage = "Created agent. Install the downloaded certificate on the agent to allow connection to the mediator.";
 
-        return Page();
+        return File(agentCert.RawData, "application/x-pkcs12", "Agent.pfx");
     }
 }

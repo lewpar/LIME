@@ -69,7 +69,7 @@ public class LimeCertificate
 
         request.CertificateExtensions.Add(new X509BasicConstraintsExtension(false, false, 0, false));
 
-        var certificate = request.Create(issuer, DateTimeOffset.Now, DateTimeOffset.Now.AddYears(1), Guid.NewGuid().ToByteArray());
+        var certificate = request.Create(issuer, DateTimeOffset.Now, issuer.NotAfter, Guid.NewGuid().ToByteArray());
 
         return new X509Certificate2(certificate.Export(X509ContentType.Pfx));
     }

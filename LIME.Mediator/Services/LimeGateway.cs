@@ -95,13 +95,6 @@ public partial class LimeGateway : BackgroundService
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(agent.Key))
-            {
-                logger.LogCritical($"Client '{limeClient.Socket.RemoteEndPoint}' is missing public key.");
-                await limeClient.DisconnectAsync("Missing public key.");
-                return;
-            }
-
             logger.LogInformation($"Client '{limeClient.Socket.RemoteEndPoint}' connected, starting handshake.");
 
             limeClient.State = LimeClientState.Handshaking;
