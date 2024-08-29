@@ -77,7 +77,7 @@ public class LimeCertificate
 
         var request = new CertificateRequest(subjectName, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
-        request.CertificateExtensions.Add(new X509BasicConstraintsExtension(false, false, 0, false));
+        request.CertificateExtensions.Add(new X509BasicConstraintsExtension(false, false, 0, true));
         request.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.KeyEncipherment | 
                                                                     X509KeyUsageFlags.DigitalSignature | 
                                                                     X509KeyUsageFlags.NonRepudiation, true));

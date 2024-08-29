@@ -1,5 +1,6 @@
 ﻿using LIME.Agent.Windows.Configuration;
 using LIME.Shared.Crypto;
+
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -57,7 +58,7 @@ internal partial class LimeAgent : IHostedService
             await client.ConnectAsync(config.MediatorAddress, config.MediatorPort);
 
             var stream = new SslStream(client.GetStream(), false, ValidateServerCertificate);
-            await stream.AuthenticateAsClientAsync("LIME.MEDIATOR", new X509CertificateCollection()
+            await stream.AuthenticateAsClientAsync(config.Certificate.Issuer, new X509CertificateCollection()
             {
                 certificate
             }, false);

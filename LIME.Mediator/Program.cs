@@ -52,80 +52,40 @@ internal class Program
             await config.SaveAsync();
         }
 
+        bool changesMade = false;
+
         if(!LimeCertificate.CertificateExists(config.RootCertificate.Thumbprint, StoreName.Root))
         {
-            await ConfigureRootCertificateAsync(config);
+            var cert = LimeCertificate.CreateRootCertificate(config.RootCertificate.Issuer);
+            cert.Store(StoreName.Root);
+
+            config.RootCertificate.Thumbprint = cert.Thumbprint;
+
+            changesMade = true;
         }
 
         if (!LimeCertificate.CertificateExists(config.ServerCertificate.Thumbprint))
         {
-            await ConfigureServerCertificateAsync(config);
+            var rootCert = LimeCertificate.GetCertificate(config.RootCertificate.Thumbprint, StoreName.Root);
+            if(rootCert is null)
+            {
+                throw new Exception("Failed to retrieve root certificate.");
+            }
+
+            var cert = LimeCertificate.CreateIntermediateCertificate(rootCert, config.ServerCertificate.Subject, X509CertificateAuthRole.Server);
+            cert.Store(StoreName.My);
+
+            config.ServerCertificate.Thumbprint = cert.Thumbprint;
+
+            changesMade = true;
+        }
+
+        if(changesMade)
+        {
+            await config.SaveAsync();
         }
 
         services.AddSingleton<LimeMediatorConfig>(config);
-    }
-
-    static async Task ConfigureRootCertificateAsync(LimeMediatorConfig config)
-    {
-        var result = ConsoleHelper.RequestYesNo("No root certificate is configured, would you like to create one?", "yes", "no");
-        if (result is null)
-        {
-            await ConfigureRootCertificateAsync(config);
-            return;
-        }
-
-        if(!result.Value)
-        {
-            Console.Clear();
-            return;
-        }
-
-        Console.WriteLine("Creating root certificate..");
-
-        var cert = LimeCertificate.CreateRootCertificate(config.RootCertificate.Issuer);
-        LimeCertificate.StoreCertificate(cert, StoreName.Root);
-
-        Console.WriteLine($"Root certificated created and stored with thumbprint '{cert.Thumbprint}'.");
-
-        config.RootCertificate.Thumbprint = cert.Thumbprint;
-        await config.SaveAsync();
-
-        ConsoleHelper.RequestEnter();
-    }
-
-    static async Task ConfigureServerCertificateAsync(LimeMediatorConfig config)
-    {
-        var result = ConsoleHelper.RequestYesNo("No server certificate is configured, would you like to create one?", "yes", "no");
-        if (result is null)
-        {
-            await ConfigureServerCertificateAsync(config);
-            return;
-        }
-
-        if (!result.Value)
-        {
-            Console.Clear();
-            return;
-        }
-
-        Console.WriteLine("Creating server certificate..");
-
-        var rootCert = LimeCertificate.GetCertificate(config.RootCertificate.Thumbprint, StoreName.Root);
-        if(rootCert is null)
-        {
-            Console.WriteLine("Failed to create server certificate, could not retrieve root certificate.");
-            return;
-        }
-
-        var cert = LimeCertificate.CreateIntermediateCertificate(rootCert, "LIME.MEDIATOR", X509CertificateAuthRole.Server);
-        LimeCertificate.StoreCertificate(cert, StoreName.My);
-
-        Console.WriteLine($"Server certificated created and stored with thumbprint '{cert.Thumbprint}'.");
-
-        config.ServerCertificate.Thumbprint = cert.Thumbprint;
-        await config.SaveAsync();
-
-        ConsoleHelper.RequestEnter();
     }
 
     static void ConfigureMiddleware(WebApplication app)

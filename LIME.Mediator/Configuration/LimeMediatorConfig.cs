@@ -13,14 +13,16 @@ public class LimeMediatorConfig
 
     public CertificateIdentifier RootCertificate { get; set; }
     public CertificateIdentifier ServerCertificate { get; set; }
+    public CertificateIdentifier AgentCertificate { get; set; }
 
     public LimeMediatorConfig()
     {
         MediatorBindAddress = "0.0.0.0";
         MediatorListenPort = 55123;
 
-        RootCertificate = new CertificateIdentifier("LIME", "");
-        ServerCertificate = new CertificateIdentifier("LIME.MEDIATOR", "");
+        RootCertificate = new CertificateIdentifier("Lime", "Lime");
+        ServerCertificate = new CertificateIdentifier("Lime", "Lime.Mediator");
+        AgentCertificate = new CertificateIdentifier("Lime.Mediator", "Lime.Agent");
     }
 
     public async Task SaveAsync()
