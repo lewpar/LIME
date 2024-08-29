@@ -1,5 +1,4 @@
 ﻿using LIME.Shared.Configuration;
-using LIME.Shared.Database;
 
 using System.Text.Json;
 
@@ -12,14 +11,16 @@ public class LimeMediatorConfig
     public string MediatorBindAddress { get; set; }
     public int MediatorListenPort { get; set; }
 
-    public CertificateIdentifier Certificate { get; set; }
+    public CertificateIdentifier RootCertificate { get; set; }
+    public CertificateIdentifier ServerCertificate { get; set; }
 
     public LimeMediatorConfig()
     {
         MediatorBindAddress = "0.0.0.0";
         MediatorListenPort = 55123;
 
-        Certificate = new CertificateIdentifier("LIME", "");
+        RootCertificate = new CertificateIdentifier("LIME", "");
+        ServerCertificate = new CertificateIdentifier("LIME.MEDIATOR", "");
     }
 
     public async Task SaveAsync()
@@ -35,6 +36,11 @@ public class LimeMediatorConfig
 
     public static async Task<LimeMediatorConfig?> LoadAsync()
     {
+        if(!File.Exists(PATH))
+        {
+            return null;
+        }
+
         using var fs = File.OpenRead(PATH);
         return await JsonSerializer.DeserializeAsync<LimeMediatorConfig>(fs);
     }

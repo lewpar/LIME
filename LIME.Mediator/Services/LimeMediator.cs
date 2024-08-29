@@ -31,7 +31,7 @@ public partial class LimeMediator
 
                 if (!packetHandlers.ContainsKey(packetType))
                 {
-                    logger.LogWarning($"Client '{client.Socket.RemoteEndPoint}' sent unknown packet type '{packetType}', disconnecting..");
+                    logger.LogWarning($"Client '{client.Socket.Client.RemoteEndPoint}' sent unknown packet type '{packetType}', disconnecting..");
                     await client.DisconnectAsync("Invalid packet.");
                     return;
                 }

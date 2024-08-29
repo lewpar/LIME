@@ -1,8 +1,0 @@
-{
-  "MediatorBindAddress": "0.0.0.0",
-  "MediatorListenPort": 55123,
-  "Certificate": {
-    "Issuer": "LIME",
-    "Thumbprint": "F198BACF12F7A4128C2C944F79794E64342ED2C4"
-  }
-}

@@ -15,7 +15,10 @@ namespace LIME.Mediator.Network;
 internal class LimeServer
 {
     public event EventHandler<UnhandledExceptionEventArgs>? UnhandledException;
-    public event EventHandler<EventArgs>? ClientAuthenticationFailed;
+    public event EventHandler<ClientConnectionEventArgs>? ClientAuthenticating;
+    public event EventHandler<ClientAuthenticationFailedEventArgs>? ClientAuthenticationFailed;
+    public event EventHandler<ClientConnectionEventArgs>? ClientAuthenticated;
+    public event EventHandler<EventArgs>? ServerStarted;
 
     public List<LimeClient> ConnectedClients { get; set; }
 
@@ -44,8 +47,12 @@ internal class LimeServer
         return cert;
     }
 
-    public async Task ListenAsync(CancellationToken cancellationToken)
+    public async Task StartAsync(CancellationToken cancellationToken)
     {
+        listener.Start();
+
+        ServerStarted?.Invoke(this, new EventArgs());
+
         while (!cancellationToken.IsCancellationRequested)
         {
             var client = await listener.AcceptTcpClientAsync();
@@ -75,15 +82,16 @@ internal class LimeServer
 
             return true;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            ClientAuthenticationFailed?.Invoke(this, new ClientAuthenticationFailedEventArgs($"Failed to validate client certificate: {ex.Message}"));
             return false;
         }
     }
 
     private async Task HandleAcceptConnectionAsync(TcpClient client)
     {
+        ClientAuthenticating?.Invoke(this, new ClientConnectionEventArgs(client));
+
         try
         {
             var stream = clientCertRequired ? new SslStream(client.GetStream(), false) :
@@ -99,9 +107,12 @@ internal class LimeServer
             var authenticationResult = await AuthenticateAsync(limeClient);
             if (!authenticationResult.Success)
             {
-                ClientAuthenticationFailed?.Invoke(this, new ClientAuthenticationFailedEventArgs(authenticationResult.Message));
+                ClientAuthenticationFailed?.Invoke(this, new ClientAuthenticationFailedEventArgs(client, authenticationResult.Message));
                 return;
             }
+
+            ClientAuthenticated?.Invoke(this, new ClientConnectionEventArgs(client));
+            ConnectedClients.Add(limeClient);
         }
         catch (Exception ex)
         {
@@ -113,13 +124,13 @@ internal class LimeServer
     {
         try
         {
-            await client.Stream.AuthenticateAsServerAsync(certificate, clientCertRequired, SslProtocols.Tls13, true);
+            await client.Stream.AuthenticateAsServerAsync(certificate, clientCertRequired, SslProtocols.Tls13, false);
 
             return new TaskResult(true);
         }
         catch (Exception ex)
         {
-            return new TaskResult(false, $"Failed to authenticate client '{client.Socket.RemoteEndPoint}': {ex.Message}");
+            return new TaskResult(false, $"Failed to authenticate client '{client.Socket.Client.RemoteEndPoint}': {ex.Message}");
         }
     }
 }

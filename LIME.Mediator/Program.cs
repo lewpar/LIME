@@ -7,6 +7,8 @@ using LIME.Shared.Crypto;
 using LIME.Shared.Extensions;
 
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel;
+using System.Security.Cryptography.X509Certificates;
 
 namespace LIME.Mediator;
 
@@ -50,23 +52,25 @@ internal class Program
             await config.SaveAsync();
         }
 
-        await ConfigureCertificateAsync(config);
+        if(!LimeCertificate.CertificateExists(config.RootCertificate.Thumbprint, StoreName.Root))
+        {
+            await ConfigureRootCertificateAsync(config);
+        }
+
+        if (!LimeCertificate.CertificateExists(config.ServerCertificate.Thumbprint))
+        {
+            await ConfigureServerCertificateAsync(config);
+        }
 
         services.AddSingleton<LimeMediatorConfig>(config);
     }
 
-    static async Task ConfigureCertificateAsync(LimeMediatorConfig config)
+    static async Task ConfigureRootCertificateAsync(LimeMediatorConfig config)
     {
-        if (!string.IsNullOrEmpty(config.Certificate.Thumbprint) &&
-            LimeCertificate.GetCertificate(config.Certificate.Thumbprint) is not null)
-        {
-            return;
-        }
-
-        var result = ConsoleHelper.RequestYesNo("No certificate is configured, would you like to create one?", "yes", "no");
+        var result = ConsoleHelper.RequestYesNo("No root certificate is configured, would you like to create one?", "yes", "no");
         if (result is null)
         {
-            await ConfigureCertificateAsync(config);
+            await ConfigureRootCertificateAsync(config);
             return;
         }
 
@@ -76,18 +80,52 @@ internal class Program
             return;
         }
 
-        Console.WriteLine("Creating certificate..");
+        Console.WriteLine("Creating root certificate..");
 
-        var cert = LimeCertificate.CreateRootCertificate(config.Certificate.Issuer);
-        LimeCertificate.StoreCertificate(cert);
+        var cert = LimeCertificate.CreateRootCertificate(config.RootCertificate.Issuer);
+        LimeCertificate.StoreCertificate(cert, StoreName.Root);
 
-        Console.WriteLine($"Certificated created and stored with thumbprint '{cert.Thumbprint}'.");
+        Console.WriteLine($"Root certificated created and stored with thumbprint '{cert.Thumbprint}'.");
 
-        config.Certificate.Thumbprint = cert.Thumbprint;
+        config.RootCertificate.Thumbprint = cert.Thumbprint;
         await config.SaveAsync();
 
         ConsoleHelper.RequestEnter();
-        Console.Clear();
+    }
+
+    static async Task ConfigureServerCertificateAsync(LimeMediatorConfig config)
+    {
+        var result = ConsoleHelper.RequestYesNo("No server certificate is configured, would you like to create one?", "yes", "no");
+        if (result is null)
+        {
+            await ConfigureServerCertificateAsync(config);
+            return;
+        }
+
+        if (!result.Value)
+        {
+            Console.Clear();
+            return;
+        }
+
+        Console.WriteLine("Creating server certificate..");
+
+        var rootCert = LimeCertificate.GetCertificate(config.RootCertificate.Thumbprint, StoreName.Root);
+        if(rootCert is null)
+        {
+            Console.WriteLine("Failed to create server certificate, could not retrieve root certificate.");
+            return;
+        }
+
+        var cert = LimeCertificate.CreateIntermediateCertificate(rootCert, "LIME.MEDIATOR", X509CertificateAuthRole.Server);
+        LimeCertificate.StoreCertificate(cert, StoreName.My);
+
+        Console.WriteLine($"Server certificated created and stored with thumbprint '{cert.Thumbprint}'.");
+
+        config.ServerCertificate.Thumbprint = cert.Thumbprint;
+        await config.SaveAsync();
+
+        ConsoleHelper.RequestEnter();
     }
 
     static void ConfigureMiddleware(WebApplication app)
@@ -108,10 +146,18 @@ internal class Program
 
     static void RunDatabaseMigrations(WebApplication app)
     {
-        using (var scope = app.Services.CreateScope())
+        try
         {
-            var dbContext = scope.ServiceProvider.GetRequiredService<LimeDbContext>();
-            dbContext.Database.Migrate();
+            using (var scope = app.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<LimeDbContext>();
+
+                dbContext.Database.Migrate();
+            }
+        }
+        catch(Exception ex)
+        {
+            app.Logger.LogCritical($"Failed to run database migrations with error: {ex.Message}");
         }
     }
 }

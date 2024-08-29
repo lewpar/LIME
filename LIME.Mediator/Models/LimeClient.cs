@@ -11,14 +11,14 @@ public class LimeClient
 {
     public required LimeClientState State { get; set; }
 
-    public Socket Socket { get; set; }
+    public TcpClient Socket { get; set; }
     public required SslStream Stream { get; set; }
 
     public required Guid Guid { get; set; }
 
     public LimeClient(TcpClient client)
     {
-        Socket = client.Client;
+        Socket = client;
     }
 
     public async Task SendPacketAsync(ILimePacket packet)
