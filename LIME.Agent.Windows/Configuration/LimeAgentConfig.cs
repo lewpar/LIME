@@ -18,7 +18,7 @@ public class LimeAgentConfig
         MediatorAddress = "127.0.0.1";
         MediatorPort = 55123;
 
-        Certificate = new CertificateIdentifier("Lime.Mediator", "Lime.Agent");
+        Certificate = new CertificateIdentifier("Lime.Intermediate", "Lime.Agent");
     }
 
     public async Task SaveAsync()

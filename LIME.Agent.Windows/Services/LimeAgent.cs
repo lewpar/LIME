@@ -58,7 +58,7 @@ internal partial class LimeAgent : IHostedService
             await client.ConnectAsync(config.MediatorAddress, config.MediatorPort);
 
             var stream = new SslStream(client.GetStream(), false, ValidateServerCertificate);
-            await stream.AuthenticateAsClientAsync(config.Certificate.Issuer, new X509CertificateCollection()
+            await stream.AuthenticateAsClientAsync("Lime.Mediator", new X509CertificateCollection()
             {
                 certificate
             }, false);
@@ -74,6 +74,11 @@ internal partial class LimeAgent : IHostedService
 
     private bool ValidateServerCertificate(object sender, X509Certificate? certificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
     {
+        if(sslPolicyErrors != SslPolicyErrors.None)
+        {
+            logger.LogCritical($"Got ssl policy error: {sslPolicyErrors.ToString()}");
+        }
+
         return sslPolicyErrors == SslPolicyErrors.None;
     }
 

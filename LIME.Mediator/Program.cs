@@ -7,7 +7,7 @@ using LIME.Shared.Crypto;
 using LIME.Shared.Extensions;
 
 using Microsoft.EntityFrameworkCore;
-using System.ComponentModel;
+
 using System.Security.Cryptography.X509Certificates;
 
 namespace LIME.Mediator;
@@ -64,15 +64,31 @@ internal class Program
             changesMade = true;
         }
 
-        if (!LimeCertificate.CertificateExists(config.ServerCertificate.Thumbprint))
+        if (!LimeCertificate.CertificateExists(config.IntermediateCertificate.Thumbprint, StoreName.CertificateAuthority))
         {
             var rootCert = LimeCertificate.GetCertificate(config.RootCertificate.Thumbprint, StoreName.Root);
-            if(rootCert is null)
+            if (rootCert is null)
             {
                 throw new Exception("Failed to retrieve root certificate.");
             }
 
-            var cert = LimeCertificate.CreateIntermediateCertificate(rootCert, config.ServerCertificate.Subject, X509CertificateAuthRole.Server);
+            var cert = LimeCertificate.CreateIntermediateCertificate(rootCert, config.IntermediateCertificate.Subject);
+            cert.Store(StoreName.CertificateAuthority);
+
+            config.IntermediateCertificate.Thumbprint = cert.Thumbprint;
+
+            changesMade = true;
+        }
+
+        if (!LimeCertificate.CertificateExists(config.ServerCertificate.Thumbprint, StoreName.My))
+        {
+            var intCert = LimeCertificate.GetCertificate(config.IntermediateCertificate.Thumbprint, StoreName.CertificateAuthority);
+            if(intCert is null)
+            {
+                throw new Exception("Failed to retrieve intermediate certificate.");
+            }
+
+            var cert = LimeCertificate.CreateSignedCertificate(intCert, config.ServerCertificate.Subject, X509CertificateAuthRole.Server);
             cert.Store(StoreName.My);
 
             config.ServerCertificate.Thumbprint = cert.Thumbprint;

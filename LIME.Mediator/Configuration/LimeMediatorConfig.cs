@@ -12,6 +12,7 @@ public class LimeMediatorConfig
     public int MediatorListenPort { get; set; }
 
     public CertificateIdentifier RootCertificate { get; set; }
+    public CertificateIdentifier IntermediateCertificate { get; set; }
     public CertificateIdentifier ServerCertificate { get; set; }
     public CertificateIdentifier AgentCertificate { get; set; }
 
@@ -21,8 +22,9 @@ public class LimeMediatorConfig
         MediatorListenPort = 55123;
 
         RootCertificate = new CertificateIdentifier("Lime", "Lime");
-        ServerCertificate = new CertificateIdentifier("Lime", "Lime.Mediator");
-        AgentCertificate = new CertificateIdentifier("Lime.Mediator", "Lime.Agent");
+        IntermediateCertificate = new CertificateIdentifier("Lime", "Lime.Intermediate");
+        ServerCertificate = new CertificateIdentifier("Lime.Intermediate", "Lime.Mediator");
+        AgentCertificate = new CertificateIdentifier("Lime.Intermediate", "Lime.Agent");
     }
 
     public async Task SaveAsync()
