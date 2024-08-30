@@ -38,14 +38,14 @@ public class CreateAgentModel : PageModel
             return Page();
         }
 
-        var intCert = LimeCertificate.GetCertificate(config.IntermediateCertificate.Thumbprint, StoreName.CertificateAuthority);
+        var intCert = LimeCertificate.GetCertificate(config.Mediator.IntermediateCertificate.Thumbprint, StoreName.CertificateAuthority);
         if (intCert is null)
         {
             ErrorMessage = "An internal error occured, the agent was not created.";
             return Page();
         }
 
-        var agentCert = LimeCertificate.CreateSignedCertificate(intCert, config.AgentCertificate.Subject, X509CertificateAuthRole.Client);
+        var agentCert = LimeCertificate.CreateSignedCertificate(intCert, config.Agent.Certificate.Subject, X509CertificateAuthRole.Client);
 
         var existingAgent = await dbContext.Agents.FirstOrDefaultAsync(a => a.Address == Model.IPAddress);
         if(existingAgent is not null)

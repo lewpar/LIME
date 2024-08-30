@@ -18,7 +18,7 @@ public partial class LimeGateway : BackgroundService
         this.mediator = mediator;
         this.logger = logger;
 
-        server = new LimeServer(IPAddress.Parse(config.MediatorBindAddress), config.MediatorListenPort, config.ServerCertificate.Thumbprint, true);
+        server = new LimeServer(IPAddress.Parse(config.Mediator.Listen.IPAddress), config.Mediator.Listen.Port, config.Mediator.ServerCertificate.Thumbprint, true);
         server.ServerStarted += Server_ServerStarted;
         server.ClientAuthenticating += Server_ClientAuthenticating;
         server.ClientAuthenticationFailed += Server_ClientAuthenticationFailed;

@@ -8,31 +8,15 @@ public class LimeMediatorConfig
 {
     public const string PATH = "./mediator.json";
 
-    public string MediatorBindAddress { get; set; }
-    public int MediatorListenPort { get; set; }
-
-    public string DashboardBindAddress { get; set; }
-    public int DashboardListenPort { get; set; }
-
-    public CertificateIdentifier RootCertificate { get; set; }
-    public CertificateIdentifier IntermediateCertificate { get; set; }
-    public CertificateIdentifier ServerCertificate { get; set; }
-    public CertificateIdentifier DashboardCertificate { get; set; }
-    public CertificateIdentifier AgentCertificate { get; set; }
+    public LimeMediatorSettings Mediator { get; private set; }
+    public LimeDashboardSettings Dashboard { get; private set; }
+    public LimeAgentSettings Agent { get; private set; }
 
     public LimeMediatorConfig()
     {
-        MediatorBindAddress = "0.0.0.0";
-        MediatorListenPort = 55123;
-
-        DashboardBindAddress = "0.0.0.0";
-        DashboardListenPort = 55124;
-
-        RootCertificate = new CertificateIdentifier("Lime", "Lime");
-        IntermediateCertificate = new CertificateIdentifier("Lime", "Lime.Intermediate");
-        ServerCertificate = new CertificateIdentifier("Lime.Intermediate", "Lime.Mediator");
-        DashboardCertificate = new CertificateIdentifier("Lime.Intermediate", "localhost");
-        AgentCertificate = new CertificateIdentifier("Lime.Intermediate", "Lime.Agent");
+        Mediator = new LimeMediatorSettings();
+        Dashboard = new LimeDashboardSettings();
+        Agent = new LimeAgentSettings();
     }
 
     public async Task SaveAsync()
