@@ -7,7 +7,7 @@ using LIME.Shared.Crypto;
 using LIME.Shared.Extensions;
 
 using Microsoft.EntityFrameworkCore;
-
+using System.Net;
 using System.Security.Cryptography.X509Certificates;
 
 namespace LIME.Mediator;
@@ -22,7 +22,7 @@ internal class Program
 
         DotEnv.Ensure("MYSQL_CONNECTION");
 
-        await ConfigureServicesAsync(builder.Services);
+        await ConfigureServicesAsync(builder, builder.Services);
 
         var app = builder.Build();
 
@@ -31,11 +31,14 @@ internal class Program
         await app.RunAsync();
     }
 
-    static async Task ConfigureServicesAsync(IServiceCollection services)
+    static async Task ConfigureServicesAsync(WebApplicationBuilder builder, IServiceCollection services)
     {
         services.AddRazorPages();
 
-        await ConfigureConfigAsync(services);
+        var config = await ConfigureConfigAsync(services);
+        services.AddSingleton<LimeMediatorConfig>(config);
+
+        ConfigureKestrel(builder.WebHost, config);
 
         services.AddDbContext<LimeDbContext>();
 
@@ -43,7 +46,24 @@ internal class Program
         services.AddHostedService<LimeGateway>();
     }
 
-    static async Task ConfigureConfigAsync(IServiceCollection services)
+    static void ConfigureKestrel(IWebHostBuilder builder, LimeMediatorConfig config)
+    {
+        builder.ConfigureKestrel(options =>
+        {
+            options.Listen(new IPEndPoint(IPAddress.Parse(config.DashboardBindAddress), config.DashboardListenPort), listenOptions =>
+            {
+                var cert = LimeCertificate.GetCertificate(config.ServerCertificate.Thumbprint, StoreName.My);
+                if(cert is null)
+                {
+                    throw new Exception("Failed to get server certificate while configuring Kestrel.");
+                }
+
+                listenOptions.UseHttps(cert);
+            });
+        });
+    }
+
+    static async Task<LimeMediatorConfig> ConfigureConfigAsync(IServiceCollection services)
     {
         var config = await LimeMediatorConfig.LoadAsync();
         if(config is null)
@@ -101,7 +121,7 @@ internal class Program
             await config.SaveAsync();
         }
 
-        services.AddSingleton<LimeMediatorConfig>(config);
+        return config;
     }
 
     static void ConfigureMiddleware(WebApplication app)

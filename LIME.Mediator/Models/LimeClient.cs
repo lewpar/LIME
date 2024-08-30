@@ -9,16 +9,17 @@ namespace LIME.Mediator.Models;
 
 public class LimeClient
 {
+    public required Guid Guid { get; set; }
+
     public required LimeClientState State { get; set; }
 
     public TcpClient Socket { get; set; }
-    public required SslStream Stream { get; set; }
+    public SslStream Stream { get; set; }
 
-    public required Guid Guid { get; set; }
-
-    public LimeClient(TcpClient client)
+    public LimeClient(TcpClient client, SslStream stream)
     {
         Socket = client;
+        Stream = stream;
     }
 
     public async Task SendPacketAsync(ILimePacket packet)

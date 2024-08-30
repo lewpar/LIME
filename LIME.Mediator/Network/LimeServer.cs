@@ -1,5 +1,6 @@
 ﻿using LIME.Mediator.Models;
 using LIME.Mediator.Network.Events;
+
 using LIME.Shared.Crypto;
 using LIME.Shared.Models;
 
@@ -15,9 +16,9 @@ namespace LIME.Mediator.Network;
 internal class LimeServer
 {
     public event EventHandler<UnhandledExceptionEventArgs>? UnhandledException;
-    public event EventHandler<ClientConnectionEventArgs>? ClientAuthenticating;
+    public event EventHandler<ClientAuthenticatingEventArgs>? ClientAuthenticating;
     public event EventHandler<ClientAuthenticationFailedEventArgs>? ClientAuthenticationFailed;
-    public event EventHandler<ClientConnectionEventArgs>? ClientAuthenticated;
+    public event EventHandler<ClientAuthenticatedEventArgs>? ClientAuthenticated;
     public event EventHandler<EventArgs>? ServerStarted;
 
     public List<LimeClient> ConnectedClients { get; set; }
@@ -90,18 +91,18 @@ internal class LimeServer
 
     private async Task HandleAcceptConnectionAsync(TcpClient client)
     {
-        ClientAuthenticating?.Invoke(this, new ClientConnectionEventArgs(client));
+        ClientAuthenticating?.Invoke(this, new ClientAuthenticatingEventArgs(client));
 
         try
         {
             var stream = clientCertRequired ? new SslStream(client.GetStream(), false) :
                                                 new SslStream(client.GetStream(), false, ValidateClientCertificate);
 
-            var limeClient = new LimeClient(client)
+            var limeClient = new LimeClient(client, stream)
             {
                 Guid = Guid.NewGuid(),
                 Stream = stream,
-                State = LimeClientState.Connecting
+                State = LimeClientState.Handshaking
             };
 
             var authenticationResult = await AuthenticateAsync(limeClient);
@@ -111,7 +112,7 @@ internal class LimeServer
                 return;
             }
 
-            ClientAuthenticated?.Invoke(this, new ClientConnectionEventArgs(client));
+            ClientAuthenticated?.Invoke(this, new ClientAuthenticatedEventArgs(limeClient));
             ConnectedClients.Add(limeClient);
         }
         catch (Exception ex)

@@ -11,6 +11,9 @@ public class LimeMediatorConfig
     public string MediatorBindAddress { get; set; }
     public int MediatorListenPort { get; set; }
 
+    public string DashboardBindAddress { get; set; }
+    public int DashboardListenPort { get; set; }
+
     public CertificateIdentifier RootCertificate { get; set; }
     public CertificateIdentifier IntermediateCertificate { get; set; }
     public CertificateIdentifier ServerCertificate { get; set; }
@@ -20,6 +23,9 @@ public class LimeMediatorConfig
     {
         MediatorBindAddress = "0.0.0.0";
         MediatorListenPort = 55123;
+
+        DashboardBindAddress = "0.0.0.0";
+        DashboardListenPort = 55124;
 
         RootCertificate = new CertificateIdentifier("Lime", "Lime");
         IntermediateCertificate = new CertificateIdentifier("Lime", "Lime.Intermediate");

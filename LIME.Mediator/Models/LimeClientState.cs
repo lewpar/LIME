@@ -2,7 +2,6 @@
 
 public enum LimeClientState
 {
-    Connecting,
     Handshaking,
     Connected,
     Disconnected

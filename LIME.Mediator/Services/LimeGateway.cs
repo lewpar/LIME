@@ -10,10 +10,12 @@ namespace LIME.Mediator.Services;
 public partial class LimeGateway : BackgroundService
 {
     private LimeServer server;
+    private LimeMediator mediator;
     private readonly ILogger<LimeGateway> logger;
 
-    public LimeGateway(LimeMediatorConfig config, ILogger<LimeGateway> logger)
+    public LimeGateway(LimeMediatorConfig config, LimeMediator mediator, ILogger<LimeGateway> logger)
     {
+        this.mediator = mediator;
         this.logger = logger;
 
         server = new LimeServer(IPAddress.Parse(config.MediatorBindAddress), config.MediatorListenPort, config.ServerCertificate.Thumbprint, true);
@@ -23,9 +25,11 @@ public partial class LimeGateway : BackgroundService
         server.ClientAuthenticated += Server_ClientAuthenticated;
     }
 
-    private void Server_ClientAuthenticated(object? sender, ClientConnectionEventArgs e)
+    private void Server_ClientAuthenticated(object? sender, ClientAuthenticatedEventArgs e)
     {
-        logger.LogInformation($"Client '{e.Client.Client.RemoteEndPoint}' authenticated.");
+        logger.LogInformation($"Client '{e.Client.Socket.Client.RemoteEndPoint}' authenticated.");
+
+        mediator.ConnectedClients.Add(e.Client);
     }
 
     private void Server_ClientAuthenticationFailed(object? sender, ClientAuthenticationFailedEventArgs e)
@@ -33,7 +37,7 @@ public partial class LimeGateway : BackgroundService
         logger.LogInformation($"Client '{e.Client.Client.RemoteEndPoint}' failed authentication: {e.Message}");
     }
 
-    private void Server_ClientAuthenticating(object? sender, ClientConnectionEventArgs e)
+    private void Server_ClientAuthenticating(object? sender, ClientAuthenticatingEventArgs e)
     {
         logger.LogInformation($"Client '{e.Client.Client.RemoteEndPoint}' has connected, authenticating..");
     }

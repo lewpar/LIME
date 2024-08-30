@@ -2,11 +2,11 @@
 
 namespace LIME.Mediator.Network.Events;
 
-public class ClientConnectionEventArgs
+public class ClientAuthenticatingEventArgs
 {
     public TcpClient Client { get; }
 
-    public ClientConnectionEventArgs(TcpClient client)
+    public ClientAuthenticatingEventArgs(TcpClient client)
     {
         Client = client;
     }

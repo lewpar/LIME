@@ -15,4 +15,8 @@
     <ProjectReference Include="..\LIME.Shared\LIME.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Network\Packets\" />
+  </ItemGroup>
+
 </Project>
