@@ -17,6 +17,7 @@ public class LimeMediatorConfig
     public CertificateIdentifier RootCertificate { get; set; }
     public CertificateIdentifier IntermediateCertificate { get; set; }
     public CertificateIdentifier ServerCertificate { get; set; }
+    public CertificateIdentifier DashboardCertificate { get; set; }
     public CertificateIdentifier AgentCertificate { get; set; }
 
     public LimeMediatorConfig()
@@ -30,6 +31,7 @@ public class LimeMediatorConfig
         RootCertificate = new CertificateIdentifier("Lime", "Lime");
         IntermediateCertificate = new CertificateIdentifier("Lime", "Lime.Intermediate");
         ServerCertificate = new CertificateIdentifier("Lime.Intermediate", "Lime.Mediator");
+        DashboardCertificate = new CertificateIdentifier("Lime.Intermediate", "localhost");
         AgentCertificate = new CertificateIdentifier("Lime.Intermediate", "Lime.Agent");
     }
 

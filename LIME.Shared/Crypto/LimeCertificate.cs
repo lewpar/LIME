@@ -114,6 +114,14 @@ public class LimeCertificate
             role == X509CertificateAuthRole.Client ? new Oid("1.3.6.1.5.5.7.3.2") : new Oid("1.3.6.1.5.5.7.3.1")
         }, false));
 
+        if(role == X509CertificateAuthRole.WebServer)
+        {
+            var sanBuilder = new SubjectAlternativeNameBuilder();
+            sanBuilder.AddDnsName(subject);
+
+            request.CertificateExtensions.Add(sanBuilder.Build());
+        }
+
         var certificate = request.Create(issuer, DateTimeOffset.Now, issuer.NotAfter, Guid.NewGuid().ToByteArray());
 
         var certificatePrivate = certificate.CopyWithPrivateKey(rsa);

@@ -3,5 +3,6 @@
 public enum X509CertificateAuthRole
 {
     Client,
-    Server
+    Server,
+    WebServer
 }

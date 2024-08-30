@@ -7,6 +7,7 @@ using LIME.Shared.Crypto;
 using LIME.Shared.Extensions;
 
 using Microsoft.EntityFrameworkCore;
+
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 
@@ -52,10 +53,10 @@ internal class Program
         {
             options.Listen(new IPEndPoint(IPAddress.Parse(config.DashboardBindAddress), config.DashboardListenPort), listenOptions =>
             {
-                var cert = LimeCertificate.GetCertificate(config.ServerCertificate.Thumbprint, StoreName.My);
+                var cert = LimeCertificate.GetCertificate(config.DashboardCertificate.Thumbprint, StoreName.My);
                 if(cert is null)
                 {
-                    throw new Exception("Failed to get server certificate while configuring Kestrel.");
+                    throw new Exception("Failed to get dashboard certificate while configuring Kestrel.");
                 }
 
                 listenOptions.UseHttps(cert);
@@ -116,7 +117,23 @@ internal class Program
             changesMade = true;
         }
 
-        if(changesMade)
+        if (!LimeCertificate.CertificateExists(config.DashboardCertificate.Thumbprint, StoreName.My))
+        {
+            var intCert = LimeCertificate.GetCertificate(config.IntermediateCertificate.Thumbprint, StoreName.CertificateAuthority);
+            if (intCert is null)
+            {
+                throw new Exception("Failed to retrieve intermediate certificate.");
+            }
+
+            var cert = LimeCertificate.CreateSignedCertificate(intCert, config.DashboardCertificate.Subject, X509CertificateAuthRole.WebServer);
+            cert.Store(StoreName.My);
+
+            config.DashboardCertificate.Thumbprint = cert.Thumbprint;
+
+            changesMade = true;
+        }
+
+        if (changesMade)
         {
             await config.SaveAsync();
         }
