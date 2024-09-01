@@ -3,11 +3,10 @@
     "LIME.Mediator": {
       "commandName": "Project",
       "workingDirectory": "C:\\Lewis\\Projects\\C#\\LIME\\LIME.Mediator\\bin\\Debug\\net8.0",
-      "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "applicationUrl": "http://localhost:30577"
+      "applicationUrl": ""
     }
   }
 }

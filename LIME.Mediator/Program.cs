@@ -150,6 +150,9 @@ internal class Program
 
         RunDatabaseMigrations(app);
 
+        app.UseHsts();
+        app.UseHttpsRedirection();
+
         app.UseStaticFiles();
 
         app.UseRouting();
