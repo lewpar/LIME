@@ -61,6 +61,11 @@ internal class Program
         }
 
         var chain = LimeCertificate.ImportBundledCertificate(@"agent.pfx");
+        if(!LimeCertificate.IsTieredChain(chain))
+        {
+            throw new Exception("The certificate agent.pfx did not contain a two-tier (root-intermediate-agent) certificate chain.");
+        }
+
         LimeCertificate.StoreBundledCertificate(chain);
 
         X509Certificate2? cert = null;

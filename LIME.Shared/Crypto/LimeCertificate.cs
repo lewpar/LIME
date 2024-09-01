@@ -177,6 +177,36 @@ public class LimeCertificate
         return chain;
     }
 
+    public static bool IsTieredChain(X509Certificate2Collection chain)
+    {
+        if(chain.Count < 3)
+        {
+            return false;
+        }
+
+        bool rootFound = false; 
+        bool intFound = false;
+        bool certFound = false;
+
+        foreach(var certificate in chain)
+        {
+            if (IsRootCertificate(certificate))
+            {
+                rootFound = true;
+            }
+            else if (IsIntermediateCertificate(certificate))
+            {
+                intFound = true;
+            }
+            else
+            {
+                certFound = true;
+            }
+        }
+
+        return rootFound && intFound && certFound;
+    }
+
     /// <summary>
     /// Takes a bundled certificate chain and stores each of the certificates in their respective store.
     /// </summary>
