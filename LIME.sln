@@ -5,7 +5,7 @@ VisualStudioVersion = 17.9.34723.18
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LIME.Mediator", "LIME.Mediator\LIME.Mediator.csproj", "{4C4CCF0F-319F-4FEE-A9EC-473C2C17BB99}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LIME.Agent.Windows", "LIME.Agent.Windows\LIME.Agent.Windows.csproj", "{42C5CCA8-4A9F-41C1-9A80-EED2C8EEAB05}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LIME.Agent", "LIME.Agent\LIME.Agent.csproj", "{42C5CCA8-4A9F-41C1-9A80-EED2C8EEAB05}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LIME.Shared", "LIME.Shared\LIME.Shared.csproj", "{A225732E-83E6-4FE2-8BA7-0EB4EA044101}"
 EndProject

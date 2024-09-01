@@ -1,5 +1,5 @@
-﻿using LIME.Agent.Windows.Configuration;
-using LIME.Agent.Windows.Services;
+﻿using LIME.Agent.Configuration;
+using LIME.Agent.Services;
 
 using LIME.Shared.Configuration;
 using LIME.Shared.Crypto;
@@ -7,9 +7,10 @@ using LIME.Shared.Crypto;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
 using System.Security.Cryptography.X509Certificates;
 
-namespace LIME.Agent.Windows;
+namespace LIME.Windows;
 
 internal class Program
 {
@@ -22,16 +23,6 @@ internal class Program
         await ConfigureServicesAsync(builder.Services);
 
         var app = builder.Build();
-
-        var config = app.Services.GetService<IConfiguration>();
-        var limeConfig = app.Services.GetService<LimeAgentConfig>();
-
-        if (config is null || limeConfig is null)
-        {
-            return;
-        }
-
-        config.Bind(limeConfig);
 
         await app.RunAsync();
     }

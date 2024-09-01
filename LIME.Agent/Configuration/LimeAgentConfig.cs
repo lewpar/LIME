@@ -2,7 +2,7 @@
 
 using System.Text.Json;
 
-namespace LIME.Agent.Windows.Configuration;
+namespace LIME.Agent.Configuration;
 
 public class LimeAgentConfig
 {

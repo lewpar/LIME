@@ -1,4 +1,4 @@
-﻿using LIME.Agent.Windows.Configuration;
+﻿using LIME.Agent.Configuration;
 using LIME.Shared.Crypto;
 
 using Microsoft.Extensions.Hosting;
@@ -9,7 +9,7 @@ using System.Net.Sockets;
 
 using System.Security.Cryptography.X509Certificates;
 
-namespace LIME.Agent.Windows.Services;
+namespace LIME.Agent.Services;
 
 internal partial class LimeAgent : IHostedService
 {
