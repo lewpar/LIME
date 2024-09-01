@@ -8,6 +8,7 @@ using LIME.Shared.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.Security.Cryptography.X509Certificates;
 
 namespace LIME.Agent.Windows;
 
@@ -59,6 +60,17 @@ internal class Program
 
     static async Task ConfigureCertificateAsync(LimeAgentConfig config)
     {
+        if(File.Exists(@"agent.pfx"))
+        {
+            var cert = new X509Certificate2(@"agent.pfx");
+            LimeCertificate.StoreCertificate(cert, StoreName.My);
+
+            config.Certificate.Thumbprint = cert.Thumbprint;
+            await config.SaveAsync();
+
+            File.Delete(@"agent.pfx");
+        }
+
         if (!string.IsNullOrEmpty(config.Certificate.Thumbprint) &&
             LimeCertificate.GetCertificate(config.Certificate.Thumbprint) is not null)
         {

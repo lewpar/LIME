@@ -36,7 +36,7 @@ internal class Program
     {
         services.AddRazorPages();
 
-        var config = await ConfigureConfigAsync(services);
+        var config = await ConfigureConfigAsync();
         services.AddSingleton<LimeMediatorConfig>(config);
 
         ConfigureKestrel(builder.WebHost, config);
@@ -64,7 +64,7 @@ internal class Program
         });
     }
 
-    static async Task<LimeMediatorConfig> ConfigureConfigAsync(IServiceCollection services)
+    static async Task<LimeMediatorConfig> ConfigureConfigAsync()
     {
         var config = await LimeMediatorConfig.LoadAsync();
         if(config is null)

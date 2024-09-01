@@ -4,7 +4,7 @@ namespace LIME.Mediator.Configuration;
 
 public class LimeDashboardSettings
 {
-    public LimeEndpoint Listen { get; private set; }
+    public LimeEndpoint Listen { get; set; }
     public LimeCertificateSettings Certificate { get; set; }
 
     public LimeDashboardSettings()

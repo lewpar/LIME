@@ -38,10 +38,17 @@ public class CreateAgentModel : PageModel
             return Page();
         }
 
+        var rootCert = LimeCertificate.GetCertificate(config.Mediator.RootCertificate.Thumbprint, StoreName.Root);
+        if(rootCert is null)
+        {
+            ErrorMessage = "Failed to fetch root certificate, the agent was not created.";
+            return Page();
+        }
+
         var intCert = LimeCertificate.GetCertificate(config.Mediator.IntermediateCertificate.Thumbprint, StoreName.CertificateAuthority);
         if (intCert is null)
         {
-            ErrorMessage = "An internal error occured, the agent was not created.";
+            ErrorMessage = "Failed to fetch intermediate certificate, the agent was not created.";
             return Page();
         }
 
@@ -51,6 +58,20 @@ public class CreateAgentModel : PageModel
         if(existingAgent is not null)
         {
             ErrorMessage = "An agent with that IP Address already exists.";
+            return Page();
+        }
+
+        var certificateChain = new X509Certificate2Collection()
+        {
+            new X509Certificate2(rootCert.Export(X509ContentType.Cert)),
+            new X509Certificate2(intCert.Export(X509ContentType.Cert)),
+            agentCert
+        };
+
+        var certificate = certificateChain.Export(X509ContentType.Pfx);
+        if(certificate is null)
+        {
+            ErrorMessage = "Failed to form certificate chain, agent not created.";
             return Page();
         }
 
@@ -69,6 +90,6 @@ public class CreateAgentModel : PageModel
 
         StatusMessage = "Created agent. Install the downloaded certificate on the agent to allow connection to the mediator.";
 
-        return File(agentCert.Export(X509ContentType.Pkcs12), "application/x-pkcs12", $"{Model.Name}.pfx");
+        return File(certificate, "application/x-pkcs12", $"{Model.Name}.pfx");
     }
 }

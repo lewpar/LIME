@@ -1,6 +1,4 @@
-﻿using LIME.Shared.Configuration;
-
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace LIME.Mediator.Configuration;
 
@@ -8,9 +6,9 @@ public class LimeMediatorConfig
 {
     public const string PATH = "./mediator.json";
 
-    public LimeMediatorSettings Mediator { get; private set; }
-    public LimeDashboardSettings Dashboard { get; private set; }
-    public LimeAgentSettings Agent { get; private set; }
+    public LimeMediatorSettings Mediator { get; set; }
+    public LimeDashboardSettings Dashboard { get; set; }
+    public LimeAgentSettings Agent { get; set; }
 
     public LimeMediatorConfig()
     {

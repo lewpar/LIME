@@ -74,12 +74,28 @@ internal partial class LimeAgent : IHostedService
 
     private bool ValidateServerCertificate(object sender, X509Certificate? certificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
     {
-        if(sslPolicyErrors != SslPolicyErrors.None)
+        if(sslPolicyErrors == SslPolicyErrors.None)
         {
-            logger.LogCritical($"Got ssl policy error: {sslPolicyErrors.ToString()}");
+            return true;
         }
 
-        return sslPolicyErrors == SslPolicyErrors.None;
+        logger.LogCritical($"Got ssl policy error: {sslPolicyErrors.ToString()}");
+
+        if (chain is null)
+        {
+            Console.WriteLine("Chain is null, could not retrieve status.");
+            return false;
+        }
+
+        foreach (var item in chain.ChainElements)
+        {
+            foreach (var status in item.ChainElementStatus)
+            {
+                Console.WriteLine($"{status.Status}: {status.StatusInformation}");
+            }
+        }
+
+        return false;
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)

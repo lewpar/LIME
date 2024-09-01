@@ -2,8 +2,8 @@
 
 public class LimeCertificateSettings
 {
-    public string Issuer { get; private set; }
-    public string Subject { get; private set; }
+    public string Issuer { get; set; }
+    public string Subject { get; set; }
 
     public string Thumbprint { get; set; }
 

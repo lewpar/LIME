@@ -2,8 +2,8 @@
 
 public class LimeEndpoint
 {
-    public string IPAddress { get; private set; }
-    public int Port { get; private set; }
+    public string IPAddress { get; set; }
+    public int Port { get; set; }
 
     public LimeEndpoint(string ipAddress, int port)
     {

@@ -4,7 +4,7 @@ namespace LIME.Mediator.Configuration;
 
 public class LimeMediatorSettings
 {
-    public LimeEndpoint Listen { get; private set; }
+    public LimeEndpoint Listen { get; set; }
 
     public LimeCertificateSettings RootCertificate { get; set; }
     public LimeCertificateSettings IntermediateCertificate { get; set; }

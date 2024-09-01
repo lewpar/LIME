@@ -24,7 +24,10 @@ public class LimeAgentConfig
     public async Task SaveAsync()
     {
         using var fs = File.OpenWrite(PATH);
-        await JsonSerializer.SerializeAsync(fs, this);
+        await JsonSerializer.SerializeAsync(fs, this, new JsonSerializerOptions()
+        {
+            WriteIndented = true
+        });
     }
 
     public static async Task<LimeAgentConfig?> LoadAsync()
@@ -35,9 +38,6 @@ public class LimeAgentConfig
         }
 
         using var fs = File.OpenRead(PATH);
-        return await JsonSerializer.DeserializeAsync<LimeAgentConfig>(fs, new JsonSerializerOptions()
-        {
-            WriteIndented = true
-        });
+        return await JsonSerializer.DeserializeAsync<LimeAgentConfig>(fs);
     }
 }
