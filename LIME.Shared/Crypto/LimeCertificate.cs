@@ -1,11 +1,16 @@
-﻿using System.Data;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
 namespace LIME.Shared.Crypto;
 
 public class LimeCertificate
 {
+    /// <summary>
+    /// Gets an X509 certificate from the X509Store.
+    /// </summary>
+    /// <param name="thumbprint">The thumbprint of the certificate to get.</param>
+    /// <param name="storeName">The store to check.</param>
+    /// <returns>The X509 certificate.</returns>
     public static X509Certificate2? GetCertificate(string thumbprint, StoreName storeName = StoreName.My)
     {
         var store = new X509Store(storeName, StoreLocation.CurrentUser, OpenFlags.ReadOnly);
@@ -33,19 +38,11 @@ public class LimeCertificate
         return null;
     }
 
-    public static X509Certificate2Collection GetCertificates(StoreName storeName = StoreName.My)
-    {
-        var store = new X509Store(storeName, StoreLocation.CurrentUser, OpenFlags.ReadOnly);
-        var certificates = store.Certificates;
-
-        if (certificates is null)
-        {
-            return new X509Certificate2Collection();
-        }
-
-        return certificates;
-    }
-
+    /// <summary>
+    /// Creates a self-signed root certificate.
+    /// </summary>
+    /// <param name="issuer">The issuer for the new certificate.</param>
+    /// <returns>The self-signed root certificate.</returns>
     public static X509Certificate2 CreateRootCertificate(string issuer)
     {
         using var rsa = RSA.Create(2048);
@@ -70,6 +67,12 @@ public class LimeCertificate
         return new X509Certificate2(certificate.Export(X509ContentType.Pfx));
     }
 
+    /// <summary>
+    /// Creates an intermediate certificate signed by the root certificate.
+    /// </summary>
+    /// <param name="rootCertificate">The root certificate.</param>
+    /// <param name="subject">The subject of the new intermediate certificate.</param>
+    /// <returns>The signed intermediate certificate.</returns>
     public static X509Certificate2 CreateIntermediateCertificate(X509Certificate2 rootCertificate, string subject)
     {
         using var rsa = RSA.Create(2048);
@@ -96,6 +99,13 @@ public class LimeCertificate
         return new X509Certificate2(certificatePrivate.Export(X509ContentType.Pkcs12, ""), "", X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
     }
 
+    /// <summary>
+    /// Creates a signed certificate from an intermediate certificate.
+    /// </summary>
+    /// <param name="issuer">The intermediate certificate.</param>
+    /// <param name="subject">The subject of the new certificate.</param>
+    /// <param name="role">The authentication role of the certificate.</param>
+    /// <returns>The signed certificate.</returns>
     public static X509Certificate2 CreateSignedCertificate(X509Certificate2 issuer, string subject, X509CertificateAuthRole role)
     {
         using var rsa = RSA.Create(2048);
@@ -129,17 +139,114 @@ public class LimeCertificate
         return new X509Certificate2(certificatePrivate.Export(X509ContentType.Pkcs12, ""), "", X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
     }
 
+    /// <summary>
+    /// Forms a bundled certificate for exporting a signed certificate. Root and intermediate are distributed with the public key only.
+    /// </summary>
+    /// <param name="root">The root certificate.</param>
+    /// <param name="intermediate">The intermediate certificated signed by the root.</param>
+    /// <param name="certificate">The certificate signed by the intermediate.</param>
+    /// <returns>The bundled certificate chain in PFX format.</returns>
+    public static byte[]? CreateBundledCertificate(X509Certificate2 root, X509Certificate2 intermediate, X509Certificate2 certificate)
+    {
+        var collection = new X509Certificate2Collection()
+        {
+            new X509Certificate2(root.Export(X509ContentType.Cert)),
+            new X509Certificate2(intermediate.Export(X509ContentType.Cert)),
+            certificate
+        };
+
+        var cert = collection.Export(X509ContentType.Pfx);
+        if(cert is null)
+        {
+            return null;
+        }
+
+        return cert;
+    }
+
+    /// <summary>
+    /// Imports an X509 certificate chain as a bundled collection.
+    /// </summary>
+    /// <param name="path">The path to the certificate.</param>
+    /// <returns>The certificate chain.</returns>
+    public static X509Certificate2Collection ImportBundledCertificate(string path)
+    {
+        var chain = new X509Certificate2Collection();
+        chain.Import(path);
+
+        return chain;
+    }
+
+    /// <summary>
+    /// Takes a bundled certificate chain and stores each of the certificates in their respective store.
+    /// </summary>
+    /// <param name="bundledCertificate">The bundle of certificate to store.</param>
+    public static void StoreBundledCertificate(X509Certificate2Collection bundledCertificate)
+    {
+        foreach (var certificate in bundledCertificate)
+        {
+            if(IsRootCertificate(certificate))
+            {
+                StoreCertificate(certificate, StoreName.Root);
+            }
+            else if(IsIntermediateCertificate(certificate))
+            {
+                StoreCertificate(certificate, StoreName.CertificateAuthority);
+            }
+            else
+            {
+                StoreCertificate(certificate, StoreName.My);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Checks to see if a certificate is a root certificate
+    /// by checking if it is self-signed.
+    /// </summary>
+    /// <param name="cert">The certificate to check.</param>
+    /// <returns></returns>
+    public static bool IsRootCertificate(X509Certificate2 cert)
+    {
+        return cert.Issuer == cert.Subject;
+    }
+
+    /// <summary>
+    /// Checks to see if a certificate is a intermediate certificate 
+    /// by checking if it has the CertificateAuthority basic constraint and is not self-signed.
+    /// </summary>
+    /// <param name="cert">The certificate to check.</param>
+    /// <returns></returns>
+    public static bool IsIntermediateCertificate(X509Certificate2 cert)
+    {
+        foreach (var extension in cert.Extensions)
+        {
+            if (extension is X509BasicConstraintsExtension basicConstraints)
+            {
+                return basicConstraints.CertificateAuthority && cert.Subject != cert.Issuer;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Stores a certificate in the X509Store.
+    /// </summary>
+    /// <param name="cert">The certificate to store.</param>
+    /// <param name="storeName">The location where the certificate will be stored.</param>
     public static void StoreCertificate(X509Certificate2 cert, StoreName storeName = StoreName.My)
     {
         var store = new X509Store(storeName, StoreLocation.CurrentUser, OpenFlags.ReadWrite);
         store.Add(cert);
     }
 
-    public static X509Certificate2 GetCertificateFromBase64(string base64)
-    {
-        return new X509Certificate2(Convert.FromBase64String(base64));
-    }
-
+    /// <summary>
+    /// Checks to see if a certificate exists in the X509Store.
+    /// </summary>
+    /// <param name="thumbprint">The thumb/fingerprint of the certificate to check.</param>
+    /// <param name="storeName">The certificate store to check.</param>
+    /// <returns></returns>
     public static bool CertificateExists(string thumbprint, StoreName storeName = StoreName.My)
     {
         if (string.IsNullOrEmpty(thumbprint) ||

@@ -54,24 +54,17 @@ public class CreateAgentModel : PageModel
 
         var agentCert = LimeCertificate.CreateSignedCertificate(intCert, config.Agent.Certificate.Subject, X509CertificateAuthRole.Client);
 
+        var bundledCert = LimeCertificate.CreateBundledCertificate(rootCert, intCert, agentCert);
+        if (bundledCert is null)
+        {
+            ErrorMessage = "Failed to form bundled certificate, agent not created.";
+            return Page();
+        }
+
         var existingAgent = await dbContext.Agents.FirstOrDefaultAsync(a => a.Address == Model.IPAddress);
         if(existingAgent is not null)
         {
             ErrorMessage = "An agent with that IP Address already exists.";
-            return Page();
-        }
-
-        var certificateChain = new X509Certificate2Collection()
-        {
-            new X509Certificate2(rootCert.Export(X509ContentType.Cert)),
-            new X509Certificate2(intCert.Export(X509ContentType.Cert)),
-            agentCert
-        };
-
-        var certificate = certificateChain.Export(X509ContentType.Pfx);
-        if(certificate is null)
-        {
-            ErrorMessage = "Failed to form certificate chain, agent not created.";
             return Page();
         }
 
@@ -90,6 +83,6 @@ public class CreateAgentModel : PageModel
 
         StatusMessage = "Created agent. Install the downloaded certificate on the agent to allow connection to the mediator.";
 
-        return File(certificate, "application/x-pkcs12", $"{Model.Name}.pfx");
+        return File(bundledCert, "application/x-pkcs12", $"{Model.Name}.pfx");
     }
 }

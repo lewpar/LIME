@@ -3,7 +3,6 @@ using LIME.Agent.Windows.Services;
 
 using LIME.Shared.Configuration;
 using LIME.Shared.Crypto;
-using LIME.Shared.Extensions;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -60,57 +59,38 @@ internal class Program
 
     static async Task ConfigureCertificateAsync(LimeAgentConfig config)
     {
-        if(File.Exists(@"agent.pfx"))
-        {
-            var cert = new X509Certificate2(@"agent.pfx");
-            LimeCertificate.StoreCertificate(cert, StoreName.My);
-
-            config.Certificate.Thumbprint = cert.Thumbprint;
-            await config.SaveAsync();
-
-            File.Delete(@"agent.pfx");
-        }
-
-        if (!string.IsNullOrEmpty(config.Certificate.Thumbprint) &&
-            LimeCertificate.GetCertificate(config.Certificate.Thumbprint) is not null)
+        if(LimeCertificate.CertificateExists(config.Certificate.Thumbprint))
         {
             return;
         }
 
-        var certs = LimeCertificate.GetCertificates();
-        var issuerCerts = certs.Where(c => c.Issuer == $"CN={config.Certificate.Issuer}").ToList();
-        if (issuerCerts.Count() < 1)
+        if(!File.Exists(@"agent.pfx"))
         {
-            throw new Exception($"No certificate found, please install a certificate issued by '{config.Certificate.Issuer}'.");
+            throw new Exception("No agent.pfx certificate found to import.");
         }
 
-        Console.WriteLine($"Certificate(s) issued by '{config.Certificate.Issuer}' found. Select a certificate to use.");
+        var chain = LimeCertificate.ImportBundledCertificate(@"agent.pfx");
+        LimeCertificate.StoreBundledCertificate(chain);
 
-        int? selection = null;
-        while (selection is null)
+        X509Certificate2? cert = null;
+        foreach (var certificate in chain)
         {
-            for (int i = 0; i < issuerCerts.Count; i++)
+            if (!LimeCertificate.IsRootCertificate(certificate) &&
+                !LimeCertificate.IsIntermediateCertificate(certificate))
             {
-                var cert = issuerCerts[i];
-                Console.WriteLine($"[{i}] Issuer: {cert.Issuer}, Thumbprint: {cert.Thumbprint}");
+                cert = certificate;
+                break;
             }
-
-            var num = ConsoleHelper.RequestNumber("> ");
-            if (num < 0 || num > issuerCerts.Count)
-            {
-                continue;
-            }
-
-            selection = num;
         }
 
-        var selectedCert = issuerCerts[selection.Value];
-        Console.WriteLine($"Selected certificate '{selection}' with thumbprint '{selectedCert.Thumbprint}'.");
+        if (cert is null)
+        {
+            throw new Exception("Failed to get agent certificate while importing certificate chain.");
+        }
 
-        config.Certificate.Thumbprint = selectedCert.Thumbprint;
+        config.Certificate.Thumbprint = cert.Thumbprint;
         await config.SaveAsync();
 
-        ConsoleHelper.RequestEnter();
-        Console.Clear();
+        File.Delete(@"agent.pfx");
     }
 }
