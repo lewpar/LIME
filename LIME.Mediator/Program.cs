@@ -80,7 +80,7 @@ internal class Program
         if(!LimeCertificate.CertificateExists(config.Mediator.RootCertificate.Thumbprint, StoreName.Root))
         {
             var cert = LimeCertificate.CreateRootCertificate(config.Mediator.RootCertificate.Issuer);
-            cert.Store(StoreName.Root);
+            LimeCertificate.StoreCertificate(cert, StoreName.Root, true);
 
             config.Mediator.RootCertificate.Thumbprint = cert.Thumbprint;
 
@@ -96,7 +96,7 @@ internal class Program
             }
 
             var cert = LimeCertificate.CreateIntermediateCertificate(rootCert, config.Mediator.IntermediateCertificate.Subject);
-            cert.Store(StoreName.CertificateAuthority);
+            LimeCertificate.StoreCertificate(cert, StoreName.CertificateAuthority, true);
 
             config.Mediator.IntermediateCertificate.Thumbprint = cert.Thumbprint;
 
@@ -112,7 +112,7 @@ internal class Program
             }
 
             var cert = LimeCertificate.CreateSignedCertificate(intCert, config.Mediator.ServerCertificate.Subject, X509CertificateAuthRole.Server);
-            cert.Store(StoreName.My);
+            LimeCertificate.StoreCertificate(cert, StoreName.My, true);
 
             config.Mediator.ServerCertificate.Thumbprint = cert.Thumbprint;
 
@@ -128,7 +128,7 @@ internal class Program
             }
 
             var cert = LimeCertificate.CreateSignedCertificate(intCert, config.Dashboard.Certificate.Subject, X509CertificateAuthRole.WebServer);
-            cert.Store(StoreName.My);
+            LimeCertificate.StoreCertificate(cert, StoreName.My, true);
 
             config.Dashboard.Certificate.Thumbprint = cert.Thumbprint;
 

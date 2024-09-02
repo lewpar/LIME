@@ -177,6 +177,11 @@ public class LimeCertificate
         return chain;
     }
 
+    /// <summary>
+    /// Checks to see if the certifice collection is a two-tier chain containing a root, intermediate and end-entity certificates.
+    /// </summary>
+    /// <param name="chain">The certificate chain to check.</param>
+    /// <returns></returns>
     public static bool IsTieredChain(X509Certificate2Collection chain)
     {
         if(chain.Count < 3)
@@ -211,21 +216,21 @@ public class LimeCertificate
     /// Takes a bundled certificate chain and stores each of the certificates in their respective store.
     /// </summary>
     /// <param name="bundledCertificate">The bundle of certificate to store.</param>
-    public static void StoreBundledCertificate(X509Certificate2Collection bundledCertificate)
+    public static void StoreBundledCertificate(X509Certificate2Collection bundledCertificate, bool replaceExisting = false)
     {
         foreach (var certificate in bundledCertificate)
         {
             if(IsRootCertificate(certificate))
             {
-                StoreCertificate(certificate, StoreName.Root);
+                StoreCertificate(certificate, StoreName.Root, replaceExisting);
             }
             else if(IsIntermediateCertificate(certificate))
             {
-                StoreCertificate(certificate, StoreName.CertificateAuthority);
+                StoreCertificate(certificate, StoreName.CertificateAuthority, replaceExisting);
             }
             else
             {
-                StoreCertificate(certificate, StoreName.My);
+                StoreCertificate(certificate, StoreName.My, replaceExisting);
             }
         }
     }
@@ -265,9 +270,20 @@ public class LimeCertificate
     /// </summary>
     /// <param name="cert">The certificate to store.</param>
     /// <param name="storeName">The location where the certificate will be stored.</param>
-    public static void StoreCertificate(X509Certificate2 cert, StoreName storeName = StoreName.My)
+    public static void StoreCertificate(X509Certificate2 cert, StoreName storeName = StoreName.My, bool replaceExisting = false)
     {
         var store = new X509Store(storeName, StoreLocation.CurrentUser, OpenFlags.ReadWrite);
+
+        if(replaceExisting)
+        {
+            var existingCertificate = store.Certificates.FirstOrDefault(c => c.Issuer == cert.Issuer && 
+                                                                             c.Subject == c.Subject);
+            if(existingCertificate is not null)
+            {
+                store.Remove(existingCertificate);
+            }
+        }
+
         store.Add(cert);
     }
 
