@@ -8,35 +8,29 @@
     <link rel="stylesheet" href="~/css/LIME.Mediator.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav>
-            <div>
-                <a asp-area="" asp-page="/Index">LIME.Mediator</a>
+    <div class="main">
+        <header class="sidebar">
+            <nav>
                 <div>
-                    <ul>
-                        <li>
-                            <a asp-area="" asp-page="/Index">Home</a>
-                        </li>
-                        <li>
-                            <a asp-area="" asp-page="/CreateAgent">Create Agent</a>
-                        </li>
-                        <li>
-                            <a asp-area="" asp-page="/Privacy">Privacy</a>
-                        </li>
-                    </ul>
+                    <a asp-area="" asp-page="/Index">Dashboard</a>
+                    <div>
+                        <ul class="sidebar-menu">
+                            <li class="sidebar-menu-item">
+                                <a asp-area="" asp-page="/CreateAgent">Create Agent</a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
-            </div>
-        </nav>
-    </header>
-    <div>
-        <main role="main">
+            </nav>
+        </header>
+        <main role="main" class="page">
             @RenderBody()
         </main>
     </div>
 
-    <footer>
+    <footer class="footer">
         <div>
-            &copy; 2024 - LIME.Mediator - <a asp-area="" asp-page="/Privacy">Privacy</a>
+            &copy; 2024 - Lime Dashboard
         </div>
     </footer>
 

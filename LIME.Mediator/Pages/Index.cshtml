@@ -5,6 +5,20 @@
 }
 
 <div>
-    <h1>Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <div>Connected Agents</div>
+    @if(this.Model.Mediator.ConnectedClients.Count > 0)
+    {
+        foreach(var agent in this.Model.Mediator.ConnectedClients)
+        {
+            <div style="display: flex; flex-direction: column; gap: 0.5rem">
+                <div style="border: 1px solid black; padding: 0.5rem;">
+                    @agent.Socket.Client.RemoteEndPoint
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div>No agents connected.</div>
+    }
 </div>
