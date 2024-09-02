@@ -1,4 +1,5 @@
 ﻿using LIME.CLI.Commands;
+using System.Text;
 
 namespace LIME.CLI;
 
@@ -11,8 +12,7 @@ internal class Program
         RegisterCommands();
 
         if (args.Length < 1 || 
-            args[0].ToLower() == "--help" || 
-            args[0].ToLower() == "-h")
+            args[0].ToLower() == "--help")
         {
             PrintHelp();
             return;
@@ -65,6 +65,19 @@ internal class Program
         foreach(var cmd in commands)
         {
             Console.WriteLine($"    {cmd.Command} - {cmd.Description}");
+            foreach(var arg in cmd.RequiredArgs)
+            {
+                Console.WriteLine($"        {arg.Key} - {arg.Value}");
+            }
         }
+
+        var exampleCmd = commands.First();
+        if(exampleCmd is null)
+        {
+            return;
+        }
+
+        Console.WriteLine("EXAMPLE:");
+        Console.WriteLine($"    lime {exampleCmd.Usage}");
     }
 }

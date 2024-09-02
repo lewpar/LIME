@@ -2,7 +2,7 @@
   "profiles": {
     "LIME.CLI": {
       "commandName": "Project",
-      "commandLineArgs": "gen-root password=test issuer=test1"
+      "commandLineArgs": "--help"
     }
   }
 }

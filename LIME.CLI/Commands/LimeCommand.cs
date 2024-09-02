@@ -4,9 +4,10 @@ internal abstract class LimeCommand
 {
     public virtual string Command { get; } = "";
     public virtual string Description { get; } = "";
+    public virtual string Usage { get; } = "";
 
-    public virtual List<string> RequiredArgs { get; } = new List<string>();
-    public Dictionary<string, string> Args { get; } = new Dictionary<string, string>();
+    public virtual Dictionary<string, string> RequiredArgs { get; } = new();
+    public Dictionary<string, string> Args { get; } = new();
 
     public virtual CommandResult TryExecute() { return new CommandResult(false); }
 
@@ -14,7 +15,7 @@ internal abstract class LimeCommand
     {
         if(args.Length < RequiredArgs.Count)
         {
-            var missingArgs = RequiredArgs.Except(args, StringComparer.OrdinalIgnoreCase);
+            var missingArgs = RequiredArgs.Keys.Except(args, StringComparer.OrdinalIgnoreCase);
 
             return new CommandResult(false, $"Missing required args '{string.Join(", ", missingArgs)}'.");
         }
