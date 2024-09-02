@@ -43,7 +43,17 @@ public class LimeCertificate
     /// </summary>
     /// <param name="issuer">The issuer for the new certificate.</param>
     /// <returns>The self-signed root certificate.</returns>
-    public static X509Certificate2 CreateRootCertificate(string issuer)
+    public static X509Certificate2 CreateRootCertificate(string issuer, string password = "", bool exportable = false)
+    {
+        return new X509Certificate2(CreateRootCertificate(issuer, password), password, exportable ? X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet : X509KeyStorageFlags.DefaultKeySet);
+    }
+
+    /// <summary>
+    /// Creates a self-signed root certificate.
+    /// </summary>
+    /// <param name="issuer">The issuer for the new certificate.</param>
+    /// <returns>The self-signed root certificate.</returns>
+    public static byte[] CreateRootCertificate(string issuer, string password = "")
     {
         using var rsa = RSA.Create(2048);
 
@@ -52,8 +62,8 @@ public class LimeCertificate
         var request = new CertificateRequest(subject, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
         request.CertificateExtensions.Add(new X509BasicConstraintsExtension(true, false, 0, true));
-        request.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.KeyCertSign | 
-                                                                    X509KeyUsageFlags.DigitalSignature | 
+        request.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.KeyCertSign |
+                                                                    X509KeyUsageFlags.DigitalSignature |
                                                                     X509KeyUsageFlags.NonRepudiation, true));
 
         request.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(new OidCollection
@@ -64,7 +74,7 @@ public class LimeCertificate
 
         var certificate = request.CreateSelfSigned(DateTimeOffset.Now, DateTimeOffset.Now.AddYears(1));
 
-        return new X509Certificate2(certificate.Export(X509ContentType.Pfx));
+        return certificate.Export(X509ContentType.Pfx, password);
     }
 
     /// <summary>
