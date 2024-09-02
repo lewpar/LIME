@@ -1,17 +1,21 @@
 ﻿namespace LIME.CLI.Commands;
 
-internal class CreateRootCertificateCmd : CliCommand
+internal class CreateRootCertificateCmd : LimeCommand
 {
-    public string Command => "gen-root";
-    public string Description => "Creates a self-signed root certiciate authority.";
+    public override string Command => "gen-root";
+    public override string Description => "Creates a self-signed root certiciate authority.";
 
-    public CommandResult TryExecute(string[] args)
+    public CreateRootCertificateCmd()
     {
-        if(args.Length < 1)
-        {
-            return new CommandResult(false, "Missing arguments");
-        }
+        RequiredArgs.Add("password");
+        RequiredArgs.Add("issuer");
+    }
 
-        return new CommandResult(true);
+    public override CommandResult TryExecute()
+    {
+        var password = GetArg("password");
+        var issuer = GetArg("issuer");
+
+        return new CommandResult(true, $"Creating password protected root certificate with issuer '{issuer}'.");
     }
 }

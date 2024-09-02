@@ -4,7 +4,7 @@ namespace LIME.CLI;
 
 internal class Program
 {
-    static List<CliCommand> commands = new List<CliCommand>();
+    static List<LimeCommand> commands = new List<LimeCommand>();
 
     static void Main(string[] args)
     {
@@ -18,7 +18,7 @@ internal class Program
             return;
         }
 
-        TryExecuteCommand(args[0], args.Skip(1).ToArray());
+        TryExecuteCommand(args[0].ToLower(), args.Skip(1).ToArray());
     }
 
     static void RegisterCommands()
@@ -28,34 +28,43 @@ internal class Program
 
     static void TryExecuteCommand(string command, string[] args)
     {
-        CliCommand? cmd = commands.FirstOrDefault(c => c.Command == command);
+        LimeCommand? cmd = commands.FirstOrDefault(c => c.Command.ToLower() == command);
         if(cmd is null)
         {
             Console.WriteLine($"Command '{command}' does not exist.");
             return;
         }
 
-        CommandResult result = cmd.TryExecute(args);
-
-        if(!result.Result)
+        CommandResult paramResult = cmd.TryParseArgs(args);
+        if(!paramResult.Result)
         {
-            Console.WriteLine($"Failed to execute command '{command}': ");
+            Console.WriteLine($"Failed to execute command '{command}': {paramResult.Message}");
             return;
+        }
+
+        CommandResult cmdResult = cmd.TryExecute();
+        if(!cmdResult.Result)
+        {
+            Console.WriteLine($"Failed to execute command '{command}': {cmdResult.Message}");
+            return;
+        }
+
+        if(!string.IsNullOrWhiteSpace(cmdResult.Message))
+        {
+            Console.WriteLine(cmdResult.Message);
         }
     }
 
     static void PrintHelp()
     {
-        var tab = "    ";
-
         Console.WriteLine("USAGE:");
 
-        Console.WriteLine($"{tab}lime [{string.Join(" | ", commands.Select(c => c.Command))}]");
+        Console.WriteLine($"    lime [{string.Join(" | ", commands.Select(c => c.Command))}] [parameters]");
         Console.WriteLine();
         Console.WriteLine("DOCUMENTATION:");
         foreach(var cmd in commands)
         {
-            Console.WriteLine($"{tab}{cmd.Command} - {cmd.Description}");
+            Console.WriteLine($"    {cmd.Command} - {cmd.Description}");
         }
     }
 }
