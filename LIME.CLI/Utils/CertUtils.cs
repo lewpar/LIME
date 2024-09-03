@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Numerics;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
 namespace LIME.CLI.Utils;
@@ -104,5 +105,18 @@ internal class CertUtils
         var certificate = request.Create(rootCertificate, DateTimeOffset.Now, rootCertificate.NotAfter, Guid.NewGuid().ToByteArray());
 
         return certificate.CopyWithPrivateKey(rsa);
+    }
+
+    public static CertificateRevocationListBuilder GetCrl(string path, out BigInteger crlNumber)
+    {
+        if (!File.Exists(path))
+        {
+            crlNumber = BigInteger.Zero;
+            return new CertificateRevocationListBuilder();
+        }
+
+        var crl = File.ReadAllBytes(path);
+
+        return CertificateRevocationListBuilder.Load(crl, out crlNumber);;
     }
 }

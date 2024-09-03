@@ -33,27 +33,17 @@ internal class RevokeCertificateCmd : LimeCommand
                 Directory.CreateDirectory(Program.CrlPath);
             }
 
-            string crlPath = Path.Combine(Program.CrlPath, $"{rootCertificate.Issuer.Split('=')[1]}.crl");
+            string crlPath = Path.Combine(Program.CrlPath, $"{rootCertificate.Issuer.Split('=')[1]}");
 
-            byte[]? crl = LoadCrl(crlPath);
-
-            CertificateRevocationListBuilder crlBuilder;
-            BigInteger crlNumber;
-
-            if (crl is null)
+            var crlBuilder = CertUtils.GetCrl($"{crlPath}.crl", out BigInteger crlNumber);
+            if(crlBuilder is null)
             {
-                crlBuilder = new CertificateRevocationListBuilder();
-                crlNumber = 1;
-            }
-            else
-            {
-                crlBuilder = CertificateRevocationListBuilder.Load(crl, out crlNumber);
-                crlNumber = crlNumber + 1;
+                return new CommandResult(false, "Failed to create Certificate Revocation List builder.");
             }
 
             crlBuilder.AddEntry(serialBytes, DateTimeOffset.Now);
 
-            crl = crlBuilder.Build(rootCertificate, crlNumber, DateTimeOffset.Now.AddYears(1), HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+            var crl = crlBuilder.Build(rootCertificate, crlNumber + 1, DateTimeOffset.Now.AddYears(1), HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
             File.WriteAllBytes(crlPath, crl);
 

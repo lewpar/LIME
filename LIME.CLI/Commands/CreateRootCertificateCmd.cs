@@ -1,5 +1,6 @@
 ﻿using LIME.CLI.Utils;
-
+using System.Numerics;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
 namespace LIME.CLI.Commands;
@@ -30,6 +31,17 @@ internal class CreateRootCertificateCmd : LimeCommand
             {
                 Directory.CreateDirectory(rootPath);
             }
+
+            string crlPath = Path.Combine(Program.CrlPath, $"{issuer}.crl");
+            var crlBuilder = CertUtils.GetCrl(crlPath, out BigInteger crlNumber);
+            if (crlBuilder is null)
+            {
+                return new CommandResult(false, "Failed to create Certificate Revocation List builder.");
+            }
+
+            var crl = crlBuilder.Build(certificate, crlNumber + 1, DateTimeOffset.Now.AddYears(1), HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+
+            File.WriteAllBytes(crlPath, crl);
 
             File.WriteAllBytes(Path.Combine(rootPath, $"{issuer}.private.p12"), privateCert);
             File.WriteAllBytes(Path.Combine(rootPath, $"{issuer}.public.crt"), publicCert);
