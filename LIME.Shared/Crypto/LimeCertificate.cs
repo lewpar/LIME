@@ -83,7 +83,18 @@ public class LimeCertificate
     /// <param name="rootCertificate">The root certificate.</param>
     /// <param name="subject">The subject of the new intermediate certificate.</param>
     /// <returns>The signed intermediate certificate.</returns>
-    public static X509Certificate2 CreateIntermediateCertificate(X509Certificate2 rootCertificate, string subject)
+    public static X509Certificate2 CreateIntermediateCertificate(X509Certificate2 rootCertificate, string subject, string password = "", bool exportable = false)
+    {
+        return new X509Certificate2(CreateIntermediateCertificate(rootCertificate, subject, password), password, exportable ? X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet : X509KeyStorageFlags.DefaultKeySet);
+    }
+
+    /// <summary>
+    /// Creates an intermediate certificate signed by the root certificate.
+    /// </summary>
+    /// <param name="rootCertificate">The root certificate.</param>
+    /// <param name="subject">The subject of the new intermediate certificate.</param>
+    /// <returns>The signed intermediate certificate.</returns>
+    public static byte[] CreateIntermediateCertificate(X509Certificate2 rootCertificate, string subject, string password = "")
     {
         using var rsa = RSA.Create(2048);
 
@@ -106,7 +117,7 @@ public class LimeCertificate
 
         var certificatePrivate = certificate.CopyWithPrivateKey(rsa);
 
-        return new X509Certificate2(certificatePrivate.Export(X509ContentType.Pkcs12, ""), "", X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
+        return certificatePrivate.Export(X509ContentType.Pkcs12, password);
     }
 
     /// <summary>
@@ -116,7 +127,19 @@ public class LimeCertificate
     /// <param name="subject">The subject of the new certificate.</param>
     /// <param name="role">The authentication role of the certificate.</param>
     /// <returns>The signed certificate.</returns>
-    public static X509Certificate2 CreateSignedCertificate(X509Certificate2 issuer, string subject, X509CertificateAuthRole role)
+    public static X509Certificate2 CreateSignedCertificate(X509Certificate2 issuer, string subject, X509CertificateAuthRole role, string password = "", bool exportable = false)
+    {
+        return new X509Certificate2(CreateSignedCertificate(issuer, subject, role, password), password, exportable ? X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet : X509KeyStorageFlags.DefaultKeySet);
+    }
+
+    /// <summary>
+    /// Creates a signed certificate from an intermediate certificate.
+    /// </summary>
+    /// <param name="issuer">The intermediate certificate.</param>
+    /// <param name="subject">The subject of the new certificate.</param>
+    /// <param name="role">The authentication role of the certificate.</param>
+    /// <returns>The signed certificate.</returns>
+    public static byte[] CreateSignedCertificate(X509Certificate2 issuer, string subject, X509CertificateAuthRole role, string password = "")
     {
         using var rsa = RSA.Create(2048);
 
@@ -125,8 +148,8 @@ public class LimeCertificate
         var request = new CertificateRequest(subjectName, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
         request.CertificateExtensions.Add(new X509BasicConstraintsExtension(false, false, 0, true));
-        request.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.KeyEncipherment | 
-                                                                    X509KeyUsageFlags.DigitalSignature | 
+        request.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.KeyEncipherment |
+                                                                    X509KeyUsageFlags.DigitalSignature |
                                                                     X509KeyUsageFlags.NonRepudiation, true));
 
         request.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(new OidCollection
@@ -134,7 +157,7 @@ public class LimeCertificate
             role == X509CertificateAuthRole.Client ? new Oid("1.3.6.1.5.5.7.3.2") : new Oid("1.3.6.1.5.5.7.3.1")
         }, false));
 
-        if(role == X509CertificateAuthRole.WebServer)
+        if (role == X509CertificateAuthRole.WebServer)
         {
             var sanBuilder = new SubjectAlternativeNameBuilder();
             sanBuilder.AddDnsName(subject);
@@ -146,7 +169,7 @@ public class LimeCertificate
 
         var certificatePrivate = certificate.CopyWithPrivateKey(rsa);
 
-        return new X509Certificate2(certificatePrivate.Export(X509ContentType.Pkcs12, ""), "", X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
+        return certificatePrivate.Export(X509ContentType.Pkcs12, password);
     }
 
     /// <summary>
@@ -312,5 +335,15 @@ public class LimeCertificate
         }
 
         return true;
+    }
+
+    public static X509Certificate2? ImportCertificate(string path, string password = "")
+    {
+        if(!File.Exists(path))
+        {
+            return null;
+        }
+
+        return new X509Certificate2(path, password);
     }
 }

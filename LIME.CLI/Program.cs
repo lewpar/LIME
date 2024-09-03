@@ -1,5 +1,4 @@
 ﻿using LIME.CLI.Commands;
-using System.Text;
 
 namespace LIME.CLI;
 
@@ -23,7 +22,12 @@ internal class Program
 
     static void RegisterCommands()
     {
-        commands.Add(new CreateRootCertificateCmd());
+        commands.AddRange(new List<LimeCommand>()
+        {
+            new CreateRootCertificateCmd(),
+            new CreateIntermediateCertificateCmd(),
+            new CreateCertificateCmd()
+        });
     }
 
     static void TryExecuteCommand(string command, string[] args)
@@ -69,6 +73,7 @@ internal class Program
             {
                 Console.WriteLine($"        {arg.Key} - {arg.Value}");
             }
+            Console.WriteLine();
         }
 
         var exampleCmd = commands.First();
