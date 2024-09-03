@@ -6,6 +6,7 @@ internal class Program
 {
     public const string RootPath = "CA/Root";
     public const string IntermediatePath = "CA/Intermediate";
+    public const string CrlPath = "CA/Certificate Revocation Lists";
 
     static List<LimeCommand> commands = new List<LimeCommand>();
 
@@ -29,8 +30,7 @@ internal class Program
         {
             new CreateRootCertificateCmd(),
             new CreateIntermediateCertificateCmd(),
-            new CreateCertificateCmd(),
-            new CreateCertificateChainCmd()
+            new RevokeCertificateCmd()
         });
     }
 

@@ -9,8 +9,4 @@
 	<PublishAot>true</PublishAot>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\LIME.Shared\LIME.Shared.csproj" />
-  </ItemGroup>
-
 </Project>
