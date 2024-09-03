@@ -8,6 +8,7 @@ public class LimeAgentConfig
 {
     public const string PATH = "./agent.json";
 
+    public string MediatorHost { get; set; }
     public string MediatorAddress { get; set; }
     public int MediatorPort { get; set; }
 
@@ -15,6 +16,7 @@ public class LimeAgentConfig
 
     public LimeAgentConfig()
     {
+        MediatorHost = "LIME Mediator";
         MediatorAddress = "127.0.0.1";
         MediatorPort = 55123;
 

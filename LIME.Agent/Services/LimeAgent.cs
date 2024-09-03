@@ -57,7 +57,7 @@ internal partial class LimeAgent : IHostedService
             await client.ConnectAsync(config.MediatorAddress, config.MediatorPort);
 
             var stream = new SslStream(client.GetStream(), false, ValidateServerCertificate);
-            await stream.AuthenticateAsClientAsync("Lime Mediator", new X509CertificateCollection()
+            await stream.AuthenticateAsClientAsync(config.MediatorHost, new X509CertificateCollection()
             {
                 certificate
             }, false);
