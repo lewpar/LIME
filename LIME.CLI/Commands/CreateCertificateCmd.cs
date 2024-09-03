@@ -5,14 +5,15 @@ namespace LIME.CLI.Commands;
 internal class CreateCertificateCmd : LimeCommand
 {
     public override string Command => "gen-cert";
-    public override string Description => "Creates a certiciate signed by an intermediate certificate.";
+    public override string Description => "Creates a RSA 2048 certiciate signed by an intermediate certificate.";
     public override string Usage => "gen-cert subject=lime.agent int=./intermediate.pfx role=client";
 
     public CreateCertificateCmd()
     {
-        RequiredArgs.Add("subject", "The subject to for the certifiicate.");
+        RequiredArgs.Add("subject", "The subject to for the certificate.");
         RequiredArgs.Add("int", "The path to the intermediate certificate.");
         RequiredArgs.Add("role", "The role of the certificate. [client | server | webserver]");
+        RequiredArgs.Add("intpassword", "The password required to access the intermediate certificate.");
     }
 
     public override CommandResult TryExecute()
@@ -20,6 +21,7 @@ internal class CreateCertificateCmd : LimeCommand
         var subject = GetArg("subject");
         var intPath = GetArg("int");
         var role = GetArg("role");
+        var intPassword = GetArg("intpassword");
 
         if(!TryGetAuthRole(role, out X509CertificateAuthRole authRole))
         {
@@ -28,13 +30,14 @@ internal class CreateCertificateCmd : LimeCommand
 
         try
         {
-            var intCertificate = LimeCertificate.ImportCertificate(intPath);
+            var intCertificate = LimeCertificate.ImportCertificate(intPath, intPassword);
             if (intCertificate is null)
             {
                 return new CommandResult(false, $"Intermediate certificate not found at '{intPath}'.");
             }
 
             var certificate = LimeCertificate.CreateSignedCertificate(intCertificate, subject, authRole, "");
+
             File.WriteAllBytes($"{subject}.pfx", certificate);
 
             return new CommandResult(true, $"Created certificate with subject '{subject}'.");

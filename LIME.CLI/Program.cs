@@ -26,7 +26,8 @@ internal class Program
         {
             new CreateRootCertificateCmd(),
             new CreateIntermediateCertificateCmd(),
-            new CreateCertificateCmd()
+            new CreateCertificateCmd(),
+            new CreateCertificateChainCmd()
         });
     }
 

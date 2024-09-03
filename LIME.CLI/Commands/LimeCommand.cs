@@ -49,4 +49,9 @@ internal abstract class LimeCommand
     {
         return Args[key] ?? "";
     }
+
+    public bool HasArg(string key)
+    {
+        return Args.ContainsKey(key);
+    }
 }

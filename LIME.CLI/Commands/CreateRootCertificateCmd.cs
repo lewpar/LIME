@@ -5,12 +5,12 @@ namespace LIME.CLI.Commands;
 internal class CreateRootCertificateCmd : LimeCommand
 {
     public override string Command => "gen-root";
-    public override string Description => "Creates a self-signed root certiciate.";
+    public override string Description => "Creates a self-signed RSA 2048 root certiciate.";
     public override string Usage => "gen-root password=hunter1 issuer=lime";
 
     public CreateRootCertificateCmd()
     {
-        RequiredArgs.Add("password", "The password required to access the certificate.");
+        RequiredArgs.Add("password", "The password to protect the certificate.");
         RequiredArgs.Add("issuer", "The issuer to for the self-signed certifiicate.");
     }
 
