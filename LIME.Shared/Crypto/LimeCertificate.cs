@@ -116,6 +116,29 @@ public class LimeCertificate
     }
 
     /// <summary>
+    /// Takes a certificate chain and stores each of the certificates in their respective store.
+    /// </summary>
+    /// <param name="chain">The chain of certificates to store.</param>
+    public static void StoreCertificateChain(X509Certificate2Collection chain, bool replaceExisting = false)
+    {
+        foreach (var certificate in chain)
+        {
+            if (IsRootCertificate(certificate))
+            {
+                StoreCertificate(certificate, StoreName.Root, replaceExisting);
+            }
+            else if (IsIntermediateCertificate(certificate))
+            {
+                StoreCertificate(certificate, StoreName.CertificateAuthority, replaceExisting);
+            }
+            else
+            {
+                StoreCertificate(certificate, StoreName.My, replaceExisting);
+            }
+        }
+    }
+
+    /// <summary>
     /// Checks to see if a certificate exists in the X509Store.
     /// </summary>
     /// <param name="thumbprint">The thumb/fingerprint of the certificate to check.</param>
@@ -130,5 +153,83 @@ public class LimeCertificate
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Imports an X509 certificate chain as a collection.
+    /// </summary>
+    /// <param name="path">The path to the certificate.</param>
+    /// <returns>The certificate chain.</returns>
+    public static X509Certificate2Collection ImportChain(string path)
+    {
+        var chain = new X509Certificate2Collection();
+        chain.Import(path);
+
+        return chain;
+    }
+
+    /// <summary>
+    /// Checks to see if a certificate is a root certificate
+    /// by checking if it is self-signed.
+    /// </summary>
+    /// <param name="cert">The certificate to check.</param>
+    /// <returns></returns>
+    public static bool IsRootCertificate(X509Certificate2 cert)
+    {
+        return cert.Issuer == cert.Subject;
+    }
+
+    /// <summary>
+    /// Checks to see if a certificate is a intermediate certificate 
+    /// by checking if it has the CertificateAuthority basic constraint and is not self-signed.
+    /// </summary>
+    /// <param name="cert">The certificate to check.</param>
+    /// <returns></returns>
+    public static bool IsIntermediateCertificate(X509Certificate2 cert)
+    {
+        foreach (var extension in cert.Extensions)
+        {
+            if (extension is X509BasicConstraintsExtension basicConstraints)
+            {
+                return basicConstraints.CertificateAuthority && cert.Subject != cert.Issuer;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Checks to see if the certifice collection is a two-tier chain containing a root, intermediate and end-entity certificates.
+    /// </summary>
+    /// <param name="chain">The certificate chain to check.</param>
+    /// <returns></returns>
+    public static bool IsTieredChain(X509Certificate2Collection chain)
+    {
+        if (chain.Count < 3)
+        {
+            return false;
+        }
+
+        bool rootFound = false;
+        bool intFound = false;
+        bool certFound = false;
+
+        foreach (var certificate in chain)
+        {
+            if (IsRootCertificate(certificate))
+            {
+                rootFound = true;
+            }
+            else if (IsIntermediateCertificate(certificate))
+            {
+                intFound = true;
+            }
+            else
+            {
+                certFound = true;
+            }
+        }
+
+        return rootFound && intFound && certFound;
     }
 }
