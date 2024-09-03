@@ -1,8 +1,8 @@
 ﻿using LIME.CLI.Utils;
+
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 
 namespace LIME.CLI.Commands;
 
@@ -67,7 +67,7 @@ internal class RevokeCertificateCmd : LimeCommand
 
     private bool TryParseSerialNumber(string serialNumber, out byte[] serialBytes)
     {
-        // Serial number should even length.
+        // Serial number should be even length.
         if(serialNumber.Length % 2 != 0)
         {
             serialBytes = new byte[0];
