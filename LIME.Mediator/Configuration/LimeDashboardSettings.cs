@@ -10,6 +10,6 @@ public class LimeDashboardSettings
     public LimeDashboardSettings()
     {
         Listen = new LimeEndpoint("0.0.0.0", 55124);
-        Certificate = new LimeCertificateSettings("Lime.Intermediate", "localhost");
+        Certificate = new LimeCertificateSettings("LIME Intermediate", "LIME Dashboard", "localhost");
     }
 }

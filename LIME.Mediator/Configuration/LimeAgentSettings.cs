@@ -6,6 +6,6 @@ public class LimeAgentSettings
 
     public LimeAgentSettings()
     {
-        Certificate = new LimeCertificateSettings("Lime.Intermediate", "Lime.Agent");
+        Certificate = new LimeCertificateSettings("LIME Intermediate", "LIME Agent");
     }
 }

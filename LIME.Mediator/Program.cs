@@ -3,10 +3,12 @@ using LIME.Mediator.Database;
 using LIME.Mediator.Services;
 
 using LIME.Shared.Configuration;
+using LIME.Shared.Crypto;
 
 using Microsoft.EntityFrameworkCore;
 
 using System.Net;
+using System.Security.Cryptography.X509Certificates;
 
 namespace LIME.Mediator;
 
@@ -42,8 +44,8 @@ internal class Program
 
         services.AddSingleton<LimeMediator>();
 
-        services.AddHostedService<LimeGateway>();
-        services.AddHostedService<LimeHeartbeat>();
+        //services.AddHostedService<LimeGateway>();
+        //services.AddHostedService<LimeHeartbeat>();
     }
 
     static void ConfigureKestrel(IWebHostBuilder builder, LimeMediatorConfig config)
@@ -52,13 +54,13 @@ internal class Program
         {
             options.Listen(new IPEndPoint(IPAddress.Parse(config.Dashboard.Listen.IPAddress), config.Dashboard.Listen.Port), listenOptions =>
             {
-                //var cert = LimeCertificate.GetCertificate(config.Dashboard.Certificate.Thumbprint, StoreName.My);
-                //if(cert is null)
-                //{
-                //    throw new Exception("Failed to get dashboard certificate while configuring Kestrel.");
-                //}
+                var cert = LimeCertificate.GetCertificate(config.Dashboard.Certificate.Thumbprint, StoreName.My);
+                if(cert is null)
+                {
+                    throw new Exception("Failed to get dashboard certificate while configuring Kestrel.");
+                }
 
-                //listenOptions.UseHttps(cert);
+                listenOptions.UseHttps(cert);
             });
         });
     }
@@ -74,63 +76,71 @@ internal class Program
 
         bool changesMade = false;
 
-        //if(!LimeCertificate.CertificateExists(config.Mediator.RootCertificate.Thumbprint, StoreName.Root))
-        //{
-        //    var cert = LimeCertificate.CreateRootCertificate(config.Mediator.RootCertificate.Issuer);
-        //    LimeCertificate.StoreCertificate(cert, StoreName.Root, true);
+        if (string.IsNullOrWhiteSpace(config.Mediator.RootCertificate.Thumbprint) ||
+            !LimeCertificate.CertificateExists(config.Mediator.RootCertificate.Thumbprint, StoreName.Root))
+        {
+            Console.WriteLine("No valid root certificate found.");
+            Console.Write("Enter thumbprint for root certificate: ");
+            var thumbprint = Console.ReadLine();
 
-        //    config.Mediator.RootCertificate.Thumbprint = cert.Thumbprint;
+            if (thumbprint is null || !LimeCertificate.CertificateExists(thumbprint, StoreName.Root))
+            {
+                throw new Exception($"A root certificate with the thumbprint '{thumbprint}' does not exist.");
+            }
 
-        //    changesMade = true;
-        //}
+            config.Mediator.RootCertificate.Thumbprint = thumbprint;
+            changesMade = true;
+        }
 
-        //if (!LimeCertificate.CertificateExists(config.Mediator.IntermediateCertificate.Thumbprint, StoreName.CertificateAuthority))
-        //{
-        //    var rootCert = LimeCertificate.GetCertificate(config.Mediator.RootCertificate.Thumbprint, StoreName.Root);
-        //    if (rootCert is null)
-        //    {
-        //        throw new Exception("Failed to retrieve root certificate.");
-        //    }
+        if (string.IsNullOrWhiteSpace(config.Mediator.IntermediateCertificate.Thumbprint) ||
+            !LimeCertificate.CertificateExists(config.Mediator.IntermediateCertificate.Thumbprint, StoreName.CertificateAuthority))
+        {
+            Console.WriteLine("No valid intermediate certificate found.");
+            Console.Write("Enter thumbprint for intermediate certificate: ");
+            var thumbprint = Console.ReadLine();
 
-        //    var cert = LimeCertificate.CreateIntermediateCertificate(rootCert, config.Mediator.IntermediateCertificate.Subject);
-        //    LimeCertificate.StoreCertificate(cert, StoreName.CertificateAuthority, true);
+            if(thumbprint is null || !LimeCertificate.CertificateExists(thumbprint, StoreName.CertificateAuthority))
+            {
+                throw new Exception($"A intermediate certificate with the thumbprint '{thumbprint}' does not exist.");
+            }
 
-        //    config.Mediator.IntermediateCertificate.Thumbprint = cert.Thumbprint;
+            config.Mediator.IntermediateCertificate.Thumbprint = thumbprint;
+            changesMade = true;
+        }
 
-        //    changesMade = true;
-        //}
+        if (!LimeCertificate.CertificateExists(config.Mediator.ServerCertificate.Thumbprint, StoreName.My))
+        {
+            var intCert = LimeCertificate.GetCertificate(config.Mediator.IntermediateCertificate.Thumbprint, StoreName.CertificateAuthority);
+            if (intCert is null)
+            {
+                throw new Exception("Failed to retrieve intermediate certificate.");
+            }
 
-        //if (!LimeCertificate.CertificateExists(config.Mediator.ServerCertificate.Thumbprint, StoreName.My))
-        //{
-        //    var intCert = LimeCertificate.GetCertificate(config.Mediator.IntermediateCertificate.Thumbprint, StoreName.CertificateAuthority);
-        //    if(intCert is null)
-        //    {
-        //        throw new Exception("Failed to retrieve intermediate certificate.");
-        //    }
+            var cert = LimeCertificate.CreateServerCertificate(intCert, config.Mediator.ServerCertificate.Subject);
 
-        //    var cert = LimeCertificate.CreateSignedCertificate(intCert, config.Mediator.ServerCertificate.Subject, X509CertificateAuthRole.Server);
-        //    LimeCertificate.StoreCertificate(cert, StoreName.My, true);
+            LimeCertificate.StoreCertificate(cert, StoreName.My, true);
 
-        //    config.Mediator.ServerCertificate.Thumbprint = cert.Thumbprint;
+            config.Mediator.ServerCertificate.Thumbprint = cert.Thumbprint;
 
-        //    changesMade = true;
-        //}
+            changesMade = true;
+        }
 
-        //if (!LimeCertificate.CertificateExists(config.Dashboard.Certificate.Thumbprint, StoreName.My))
-        //{
-        //    var intCert = LimeCertificate.GetCertificate(config.Mediator.IntermediateCertificate.Thumbprint, StoreName.CertificateAuthority);
-        //    if (intCert is null)
-        //    {
-        //        throw new Exception("Failed to retrieve intermediate certificate.");
-        //    }
+        if (!LimeCertificate.CertificateExists(config.Dashboard.Certificate.Thumbprint, StoreName.My))
+        {
+            var intCert = LimeCertificate.GetCertificate(config.Mediator.IntermediateCertificate.Thumbprint, StoreName.CertificateAuthority);
+            if (intCert is null)
+            {
+                throw new Exception("Failed to retrieve intermediate certificate.");
+            }
 
-        //    var cert = LimeCertificate.CreateSignedCertificate(intCert, config.Dashboard.Certificate.Subject, X509CertificateAuthRole.WebServer);
-        //    LimeCertificate.StoreCertificate(cert, StoreName.My, true);
+            var cert = LimeCertificate.CreateServerCertificate(intCert, config.Dashboard.Certificate.Subject, config.Dashboard.Certificate.DNS);
 
-        //    config.Dashboard.Certificate.Thumbprint = cert.Thumbprint;
+            LimeCertificate.StoreCertificate(cert, StoreName.My, true);
 
-        //    changesMade = true;
-        //}
+            config.Dashboard.Certificate.Thumbprint = cert.Thumbprint;
+
+            changesMade = true;
+        }
 
         if (changesMade)
         {

@@ -17,8 +17,8 @@ public class LimeMediatorSettings
 
         HeartbeatSeconds = 10;
 
-        RootCertificate = new LimeCertificateSettings("Lime", "Lime");
-        IntermediateCertificate = new LimeCertificateSettings("Lime", "Lime.Intermediate");
-        ServerCertificate = new LimeCertificateSettings("Lime.Intermediate", "Lime.Mediator");
+        RootCertificate = new LimeCertificateSettings("LIME Root", "LIME Root");
+        IntermediateCertificate = new LimeCertificateSettings("LIME Root", "LIME Intermediate");
+        ServerCertificate = new LimeCertificateSettings("LIME Intermediate", "LIME Mediator");
     }
 }
