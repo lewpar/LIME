@@ -1,5 +1,5 @@
 ﻿using LIME.Agent.Configuration;
-
+using LIME.Shared.Crypto;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -24,21 +24,21 @@ internal partial class LimeAgent : IHostedService
         this.logger = logger;
         this.config = config;
 
-        //certificate = GetCertificate(config.Certificate.Thumbprint);
+        certificate = GetCertificate(config.Certificate.Thumbprint);
 
         client = new TcpClient();
     }
 
-    //private X509Certificate2 GetCertificate(string certificateThumbprint)
-    //{
-    //    var cert = LimeCertificate.GetCertificate(certificateThumbprint);
-    //    if (cert is null)
-    //    {
-    //        throw new NullReferenceException($"No certificate was found with the thumbprint '{certificateThumbprint}'.");
-    //    }
+    private X509Certificate2 GetCertificate(string certificateThumbprint)
+    {
+        var cert = LimeCertificate.GetCertificate(certificateThumbprint);
+        if (cert is null)
+        {
+            throw new NullReferenceException($"No certificate was found with the thumbprint '{certificateThumbprint}'.");
+        }
 
-    //    return cert;
-    //}
+        return cert;
+    }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -57,7 +57,7 @@ internal partial class LimeAgent : IHostedService
             await client.ConnectAsync(config.MediatorAddress, config.MediatorPort);
 
             var stream = new SslStream(client.GetStream(), false, ValidateServerCertificate);
-            await stream.AuthenticateAsClientAsync("Lime.Mediator", new X509CertificateCollection()
+            await stream.AuthenticateAsClientAsync("Lime Mediator", new X509CertificateCollection()
             {
                 certificate
             }, false);

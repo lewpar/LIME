@@ -57,7 +57,7 @@ public class CreateAgentModel : PageModel
         {
             rootCert,
             new X509Certificate2(intCert.Export(X509ContentType.Cert)),
-            agentCert
+            new X509Certificate2(agentCert.Export(X509ContentType.Pkcs12, ""), "", X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable),
         };
 
         if (chain is null)
@@ -95,6 +95,6 @@ public class CreateAgentModel : PageModel
 
         StatusMessage = "Created agent. Install the downloaded certificate on the agent to allow connection to the mediator.";
 
-        return File(pfx, "application/x-pkcs12", $"{Model.Name}.pfx");
+        return File(pfx, "application/x-pkcs12", $"agent.pfx");
     }
 }

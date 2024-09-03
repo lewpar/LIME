@@ -64,7 +64,7 @@ internal class Program
             throw new Exception("The certificate agent.pfx did not contain a two-tier (root-intermediate-agent) certificate chain.");
         }
 
-        LimeCertificate.StoreCertificateChain(chain, true);
+        LimeCertificate.StoreCertificateChain(chain);
 
         X509Certificate2? cert = null;
         foreach (var certificate in chain)
