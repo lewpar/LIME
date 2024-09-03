@@ -4,6 +4,9 @@ namespace LIME.CLI;
 
 internal class Program
 {
+    public const string RootPath = "CA/Root";
+    public const string IntermediatePath = "CA/Intermediate";
+
     static List<LimeCommand> commands = new List<LimeCommand>();
 
     static void Main(string[] args)
@@ -40,13 +43,6 @@ internal class Program
             return;
         }
 
-        CommandResult paramResult = cmd.TryParseArgs(args);
-        if(!paramResult.Result)
-        {
-            Console.WriteLine($"Failed to execute command '{command}': {paramResult.Message}");
-            return;
-        }
-
         CommandResult cmdResult = cmd.TryExecute();
         if(!cmdResult.Result)
         {
@@ -64,16 +60,12 @@ internal class Program
     {
         Console.WriteLine("USAGE:");
 
-        Console.WriteLine($"    lime [{string.Join(" | ", commands.Select(c => c.Command))}] [parameters]");
+        Console.WriteLine($"    lime [{string.Join(" | ", commands.Select(c => c.Command))}]");
         Console.WriteLine();
         Console.WriteLine("DOCUMENTATION:");
         foreach(var cmd in commands)
         {
             Console.WriteLine($"    {cmd.Command} - {cmd.Description}");
-            foreach(var arg in cmd.RequiredArgs)
-            {
-                Console.WriteLine($"        {arg.Key} - {arg.Value}");
-            }
             Console.WriteLine();
         }
 

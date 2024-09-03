@@ -1,7 +1,6 @@
 ﻿using LIME.Mediator.Models;
 using LIME.Mediator.Network.Events;
 
-using LIME.Shared.Crypto;
 using LIME.Shared.Models;
 
 using System.Net;
@@ -32,21 +31,21 @@ internal class LimeServer
         ConnectedClients = new List<LimeClient>();
 
         listener = new TcpListener(address, port);
-        certificate = GetCertificate(certificateThumbprint);
+        //certificate = GetCertificate(certificateThumbprint);
 
         clientCertRequired = clientCertificateRequired;
     }
 
-    private X509Certificate2 GetCertificate(string certificateThumbprint)
-    {
-        var cert = LimeCertificate.GetCertificate(certificateThumbprint);
-        if (cert is null)
-        {
-            throw new NullReferenceException($"No certificate was found with the thumbprint '{certificateThumbprint}'.");
-        }
+    //private X509Certificate2 GetCertificate(string certificateThumbprint)
+    //{
+    //    var cert = LimeCertificate.GetCertificate(certificateThumbprint);
+    //    if (cert is null)
+    //    {
+    //        throw new NullReferenceException($"No certificate was found with the thumbprint '{certificateThumbprint}'.");
+    //    }
 
-        return cert;
-    }
+    //    return cert;
+    //}
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
