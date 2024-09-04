@@ -52,6 +52,13 @@ public class CreateAgentModel : PageModel
         }
 
         var agentCert = LimeCertificate.CreateClientCertificate(intCert, config.Agent.Certificate.Subject);
+        var crlBuilder = new CertificateRevocationListBuilder();
+
+        if (crlBuilder is null)
+        {
+            ErrorMessage = "Failed to create Certificate Revocation List builder.";
+            return Page();
+        }
 
         var chain = new X509Certificate2Collection()
         {

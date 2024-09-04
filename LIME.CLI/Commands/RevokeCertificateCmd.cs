@@ -9,17 +9,17 @@ namespace LIME.CLI.Commands;
 internal class RevokeCertificateCmd : LimeCommand
 {
     public override string Command => "revoke-cert";
-    public override string Description => "Adds a certificate serial number to a root certificates revocation list (CRL).";
+    public override string Description => "Adds a certificate serial number to a intermediate certificates revocation list (CRL).";
     public override string Usage => "revoke-cert";
 
     public override CommandResult TryExecute()
     {
         try
         {
-            X509Certificate2? rootCertificate = CertUtils.GetRootCertificate();
-            if (rootCertificate is null)
+            X509Certificate2? intCertificate = CertUtils.GetIntermediateCertificate();
+            if (intCertificate is null)
             {
-                return new CommandResult(false, "No root certificate was found.");
+                return new CommandResult(false, "No intermediate certificate was found.");
             }
 
             var serialNumber = ConsoleUtils.GetInput("Enter serial number of certificate to revoke: ");
@@ -33,7 +33,7 @@ internal class RevokeCertificateCmd : LimeCommand
                 Directory.CreateDirectory(Program.CrlPath);
             }
 
-            string crlPath = Path.Combine(Program.CrlPath, $"{rootCertificate.Issuer.Split('=')[1]}");
+            string crlPath = Path.Combine(Program.CrlPath, $"{intCertificate.Issuer.Split('=')[1]}");
 
             var crlBuilder = CertUtils.GetCrl($"{crlPath}.crl", out BigInteger crlNumber);
             if(crlBuilder is null)
@@ -43,7 +43,7 @@ internal class RevokeCertificateCmd : LimeCommand
 
             crlBuilder.AddEntry(serialBytes, DateTimeOffset.Now);
 
-            var crl = crlBuilder.Build(rootCertificate, crlNumber + 1, DateTimeOffset.Now.AddYears(1), HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+            var crl = crlBuilder.Build(intCertificate, crlNumber + 1, DateTimeOffset.Now.AddYears(1), HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
             File.WriteAllBytes(crlPath, crl);
 

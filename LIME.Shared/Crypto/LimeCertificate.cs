@@ -1,5 +1,4 @@
-﻿using System.Data;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
 namespace LIME.Shared.Crypto;
@@ -29,7 +28,7 @@ public class LimeCertificate
         return certificate.CopyWithPrivateKey(rsa);
     }
 
-    public static X509Certificate2 CreateServerCertificate(X509Certificate2 issuer, string subject, string dns = "")
+    public static X509Certificate2 CreateServerCertificate(X509Certificate2 issuer, string subject, string crlUrl, string dns = "")
     {
         using var rsa = RSA.Create(2048);
 
@@ -54,6 +53,9 @@ public class LimeCertificate
 
             request.CertificateExtensions.Add(sanBuilder.Build());
         }
+
+        // Certificate Revocation List
+        request.CertificateExtensions.Add(CertificateRevocationListBuilder.BuildCrlDistributionPointExtension(new[] { crlUrl }));
 
         var certificate = request.Create(issuer, DateTimeOffset.Now, issuer.NotAfter, Guid.NewGuid().ToByteArray());
 

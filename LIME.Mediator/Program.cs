@@ -8,6 +8,8 @@ using LIME.Shared.Crypto;
 using Microsoft.EntityFrameworkCore;
 
 using System.Net;
+using System.Numerics;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
 namespace LIME.Mediator;
@@ -116,9 +118,15 @@ internal class Program
                 throw new Exception("Failed to retrieve intermediate certificate.");
             }
 
-            var cert = LimeCertificate.CreateServerCertificate(intCert, config.Mediator.ServerCertificate.Subject);
+            var cert = LimeCertificate.CreateServerCertificate(intCert, config.Mediator.ServerCertificate.Subject, "http://192.168.0.102/med.crl");
 
             LimeCertificate.StoreCertificate(cert, StoreName.My, true);
+
+            string crlPath = "./med.crl";
+
+            var crl = new CertificateRevocationListBuilder().Build(intCert, BigInteger.One, DateTimeOffset.Now.AddYears(1), HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+
+            File.WriteAllBytes(crlPath, crl);
 
             config.Mediator.ServerCertificate.Thumbprint = cert.Thumbprint;
 

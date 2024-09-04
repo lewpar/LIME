@@ -2,7 +2,7 @@
   "profiles": {
     "LIME.CLI": {
       "commandName": "Project",
-      "commandLineArgs": "gen-int"
+      "commandLineArgs": "revoke-cert"
     }
   }
 }

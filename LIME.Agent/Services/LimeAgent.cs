@@ -7,6 +7,7 @@ using System.Net.Security;
 using System.Net.Sockets;
 
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 
 namespace LIME.Agent.Services;
 
@@ -57,10 +58,20 @@ internal partial class LimeAgent : IHostedService
             await client.ConnectAsync(config.MediatorAddress, config.MediatorPort);
 
             var stream = new SslStream(client.GetStream(), false, ValidateServerCertificate);
-            await stream.AuthenticateAsClientAsync(config.MediatorHost, new X509CertificateCollection()
+
+            await stream.AuthenticateAsClientAsync(new SslClientAuthenticationOptions()
             {
-                certificate
-            }, false);
+                ClientCertificates = new X509CertificateCollection()
+                {
+                    certificate
+                },
+                CertificateRevocationCheckMode = X509RevocationMode.Online,
+                CertificateChainPolicy = new X509ChainPolicy()
+                {
+                    RevocationFlag = X509RevocationFlag.EntireChain,
+                },
+                TargetHost = config.MediatorHost
+            });
         }
         catch(Exception ex)
         {
@@ -73,26 +84,39 @@ internal partial class LimeAgent : IHostedService
 
     private bool ValidateServerCertificate(object sender, X509Certificate? certificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
     {
+        if(chain is null || certificate is null)
+        {
+            return false;
+        }
+
         if(sslPolicyErrors == SslPolicyErrors.None)
         {
             return true;
         }
 
-        logger.LogCritical($"Got ssl policy error: {sslPolicyErrors.ToString()}");
+        var sb = new StringBuilder();
+        sb.AppendLine($"Got ssl policy error: {sslPolicyErrors.ToString()}");
 
         if (chain is null)
         {
-            Console.WriteLine("Chain is null, could not retrieve status.");
+            sb.AppendLine("Chain is null, could not retrieve status.");
             return false;
         }
 
         foreach (var item in chain.ChainElements)
         {
+            if(item.ChainElementStatus.Length > 0)
+            {
+                sb.AppendLine($"   {item.Certificate.Subject}");
+            }
+
             foreach (var status in item.ChainElementStatus)
             {
-                Console.WriteLine($"{status.Status}: {status.StatusInformation}");
+                sb.AppendLine($"       {status.Status}: {status.StatusInformation}");
             }
         }
+
+        logger.LogCritical(sb.ToString());
 
         return false;
     }
