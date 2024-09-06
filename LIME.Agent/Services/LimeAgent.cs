@@ -19,7 +19,7 @@ public partial class LimeAgent : IHostedService
 {
     public bool CheckCertificateRevocation { get; set; }
 
-    public Dictionary<LimeOpCodes, Func<Task>> PacketHandlers;
+    public Dictionary<LimeOpCodes, Func<SslStream, Task>> PacketHandlers;
 
     private TcpClient client;
     private SslStream? stream;
@@ -38,7 +38,7 @@ public partial class LimeAgent : IHostedService
         LoadClientCertificate(config.Certificate.Thumbprint);
 
         CheckCertificateRevocation = false;
-        PacketHandlers = new Dictionary<LimeOpCodes, Func<Task>>()
+        PacketHandlers = new Dictionary<LimeOpCodes, Func<SslStream, Task>>()
         {
             { LimeOpCodes.SMSG_DISCONNECT, HandleDisconnectAsync }
         };
@@ -138,11 +138,12 @@ public partial class LimeAgent : IHostedService
 
                 if (!PacketHandlers.ContainsKey(packetType))
                 {
-                    logger.LogCritical($"Received invalid opcode '{(int)packetType}'. Disconnecting.");
+                    logger.LogCritical($"Received invalid opcode '{(int)packetType}'. Disconnected.");
+                    connected = false;
                     return;
                 }
 
-                await PacketHandlers[packetType].Invoke();
+                await PacketHandlers[packetType].Invoke(stream);
             }
         }
         catch (Exception ex)

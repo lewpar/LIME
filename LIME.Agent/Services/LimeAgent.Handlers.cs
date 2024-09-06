@@ -1,20 +1,15 @@
 ﻿using LIME.Shared.Extensions;
 
 using Microsoft.Extensions.Logging;
-
+using System.Net.Security;
 using System.Text;
 
 namespace LIME.Agent.Services;
 
 public partial class LimeAgent
 {
-    private async Task HandleDisconnectAsync()
+    private async Task HandleDisconnectAsync(SslStream stream)
     {
-        if (stream is null)
-        {
-            return;
-        }
-
         var dataLength = await stream.ReadIntAsync();
         var data = await stream.ReadBytesAsync(dataLength);
 
