@@ -164,6 +164,7 @@ public partial class LimeMediator : BackgroundService
             logger.LogInformation($"Client '{limeClient.Guid}' authenticated.");
 
             limeClient.LastHeartbeat = DateTimeOffset.Now;
+            limeClient.State = LimeClientState.Connected;
 
             await StartListeningForDataAsync(limeClient);
         }
@@ -177,6 +178,12 @@ public partial class LimeMediator : BackgroundService
     {
         try
         {
+            if(client.State != LimeClientState.Connected)
+            {
+                logger.LogCritical("Started listening for client data when client is not ready.");
+                return;
+            }
+
             while (client.State == LimeClientState.Connected)
             {
                 var packetType = await client.Stream.ReadPacketTypeAsync();

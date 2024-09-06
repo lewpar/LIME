@@ -12,6 +12,8 @@ public class LimeAgentConfig
     public string MediatorAddress { get; set; }
     public int MediatorPort { get; set; }
 
+    public int HeartbeatFrequency { get; set; }
+
     public CertificateIdentifier Certificate { get; set; }
 
     public LimeAgentConfig()
@@ -19,6 +21,8 @@ public class LimeAgentConfig
         MediatorHost = "LIME Mediator";
         MediatorAddress = "127.0.0.1";
         MediatorPort = 55123;
+
+        HeartbeatFrequency = 15;
 
         Certificate = new CertificateIdentifier("Lime.Intermediate", "Lime.Agent");
     }

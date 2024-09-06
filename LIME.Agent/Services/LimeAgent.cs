@@ -1,5 +1,5 @@
 ﻿using LIME.Agent.Configuration;
-
+using LIME.Agent.Network.Packets;
 using LIME.Shared.Crypto;
 using LIME.Shared.Extensions;
 using LIME.Shared.Network;
@@ -121,6 +121,7 @@ public partial class LimeAgent : IHostedService
         connected = true;
 
         _ = StartListeningForDataAsync();
+        _ = StartHeartbeatAsync();
     }
 
     private async Task StartListeningForDataAsync()
@@ -147,6 +148,33 @@ public partial class LimeAgent : IHostedService
             }
         }
         catch (Exception ex)
+        {
+            logger.LogCritical($"{ex.Message}: {ex.StackTrace}");
+        }
+    }
+
+    private async Task StartHeartbeatAsync()
+    {
+        try
+        {
+            while (connected)
+            {
+                if(stream is null)
+                {
+                    return;
+                }
+
+                await Task.Delay(config.HeartbeatFrequency * 1000);
+
+                logger.LogInformation("Sending heartbeat..");
+
+                var packet = new HeartbeatPacket();
+                await stream.WriteAsync(packet.Serialize());
+
+                logger.LogInformation("Sent heartbeat.");
+            }
+        }
+        catch(Exception ex)
         {
             logger.LogCritical($"{ex.Message}: {ex.StackTrace}");
         }
