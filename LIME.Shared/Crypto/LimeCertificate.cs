@@ -234,4 +234,18 @@ public class LimeCertificate
 
         return rootFound && intFound && certFound;
     }
+
+    public static X509ChainElement? GetRootCertificate(X509Chain chain)
+    {
+        foreach (var element in chain.ChainElements)
+        {
+            var cert = element.Certificate;
+            if(IsRootCertificate(cert))
+            {
+                return element;
+            }
+        }
+
+        return null;
+    }
 }

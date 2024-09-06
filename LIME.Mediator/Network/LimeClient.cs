@@ -1,17 +1,17 @@
-﻿using LIME.Mediator.Network;
-using LIME.Mediator.Network.Packets;
+﻿using LIME.Mediator.Network.Packets;
 using LIME.Shared.Network;
 
 using System.Net.Security;
 using System.Net.Sockets;
 
-namespace LIME.Mediator.Models;
+namespace LIME.Mediator.Network;
 
 public class LimeClient
 {
     public required Guid Guid { get; set; }
-
     public required LimeClientState State { get; set; }
+
+    public DateTimeOffset LastHeartbeat { get; set; }
 
     public TcpClient Socket { get; set; }
     public SslStream Stream { get; set; }
@@ -34,11 +34,19 @@ public class LimeClient
 
     public async Task DisconnectAsync(string message = "")
     {
-        var packet = new DisconnectPacket(message);
-        await Stream.WriteAsync(packet.Serialize());
+        try
+        {
+            var packet = new DisconnectPacket(message);
+            await Stream.WriteAsync(packet.Serialize());
+        }
+        catch (Exception)
+        {
 
-        Socket.Close();
-
-        State = LimeClientState.Disconnected;
+        }
+        finally
+        {
+            Socket.Close();
+            State = LimeClientState.Disconnected;
+        }
     }
 }

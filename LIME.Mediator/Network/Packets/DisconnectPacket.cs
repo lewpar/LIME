@@ -17,7 +17,7 @@ public class DisconnectPacket : ILimePacket
         var data = string.IsNullOrWhiteSpace(message) ? new byte[] { 0x01 } : Encoding.UTF8.GetBytes(message);
         var ms = new MemoryStream();
 
-        ms.Write(BitConverter.GetBytes((int)LimePacketType.SMSG_DISCONNECT));
+        ms.Write(BitConverter.GetBytes((int)LimeOpCodes.SMSG_DISCONNECT));
         ms.Write(BitConverter.GetBytes(data.Length));
         ms.Write(data);
 

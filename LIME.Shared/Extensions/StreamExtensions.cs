@@ -20,9 +20,9 @@ public static class StreamExtensions
         return BitConverter.ToInt32(await ReadBytesAsync(stream, sizeof(int), cancellationToken));
     }
 
-    public static async Task<LimePacketType> ReadPacketTypeAsync(this SslStream stream)
+    public static async Task<LimeOpCodes> ReadPacketTypeAsync(this SslStream stream)
     {
-        return (LimePacketType)await ReadIntAsync(stream);
+        return (LimeOpCodes)await ReadIntAsync(stream);
     }
 
     public static async Task WriteBytesAsync(this SslStream stream, byte[] bytes)

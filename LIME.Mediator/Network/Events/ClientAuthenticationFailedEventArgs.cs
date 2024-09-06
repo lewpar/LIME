@@ -2,7 +2,7 @@
 
 namespace LIME.Mediator.Network.Events;
 
-internal class ClientAuthenticationFailedEventArgs : EventArgs
+public class ClientAuthenticationFailedEventArgs : EventArgs
 {
     public TcpClient Client { get; }
     public string Message { get; }

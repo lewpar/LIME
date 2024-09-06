@@ -44,10 +44,7 @@ internal class Program
 
         services.AddDbContext<LimeDbContext>();
 
-        services.AddSingleton<LimeMediator>();
-
-        services.AddHostedService<LimeGateway>();
-        services.AddHostedService<LimeHeartbeat>();
+        services.AddHostedService<LimeMediator>();
     }
 
     static void ConfigureKestrel(IWebHostBuilder builder, LimeMediatorConfig config)

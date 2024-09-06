@@ -1,8 +1,7 @@
 ﻿namespace LIME.Shared.Network;
 
-public enum LimePacketType
+public enum LimeOpCodes
 {
-    SMSG_HEARTBEAT,
     CMSG_HEARTBEAT,
     SMSG_DISCONNECT
 }

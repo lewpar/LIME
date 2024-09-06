@@ -1,4 +1,4 @@
-﻿namespace LIME.Mediator.Models;
+﻿namespace LIME.Mediator.Network;
 
 public enum LimeClientState
 {
