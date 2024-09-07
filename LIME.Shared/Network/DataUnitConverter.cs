@@ -2,6 +2,13 @@
 
 public class DataUnitConverter
 {
+    /// <summary>
+    /// Converts a byte value into a human-readable appropriate data unit
+    /// based on its size (e.g., B, KB, MB, GB, TB).
+    /// </summary>
+    /// <param name="bytes">The number of bytes to convert.</param>
+    /// <returns>A <see cref="DataUnit"/> object representing the converted value and its 
+    /// corresponding data unit in a formatted string.</returns>
     public static DataUnit GetDataUnitFromBytes(long bytes)
     {
         string[] units = { "B", "KB", "MB", "GB", "TB" };

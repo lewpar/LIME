@@ -18,8 +18,8 @@ public class LimeMediatorSettings
     {
         Listen = new LimeEndpoint("0.0.0.0", 55123);
 
-        HeartbeatCheckFrequency = 15;
-        HeartbeatTimeout = 15;
+        HeartbeatCheckFrequency = 30;
+        HeartbeatTimeout = 30;
         HeartbeatTimeoutMargin = 5;
 
         RootCertificate = new LimeCertificateSettings("LIME Root", "LIME Root");

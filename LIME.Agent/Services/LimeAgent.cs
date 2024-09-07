@@ -1,8 +1,6 @@
 ﻿using LIME.Agent.Configuration;
-using LIME.Agent.Network.Packets;
 
 using LIME.Shared.Crypto;
-using LIME.Shared.Diagnostics;
 using LIME.Shared.Extensions;
 using LIME.Shared.Network;
 
@@ -12,7 +10,9 @@ using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
+
 using System.Security.Cryptography.X509Certificates;
+
 using System.Text;
 
 namespace LIME.Agent.Services;
@@ -32,10 +32,15 @@ public partial class LimeAgent : IHostedService
     private readonly ILogger<LimeAgent> logger;
     private readonly LimeAgentConfig config;
 
+    private System.Timers.Timer heartbeatTimer;
+
     public LimeAgent(ILogger<LimeAgent> logger, LimeAgentConfig config)
     {
         this.logger = logger;
         this.config = config;
+
+        heartbeatTimer = new System.Timers.Timer(config.HeartbeatFrequency * 1000);
+        heartbeatTimer.Elapsed += HandleHeartbeatAsync;
 
         LoadClientCertificate(config.Certificate.Thumbprint);
 
@@ -123,7 +128,8 @@ public partial class LimeAgent : IHostedService
         connected = true;
 
         _ = StartListeningForDataAsync();
-        _ = StartHeartbeatAsync();
+
+        heartbeatTimer.Start();
     }
 
     private async Task StartListeningForDataAsync()
@@ -156,37 +162,6 @@ public partial class LimeAgent : IHostedService
             }
         }
         catch (Exception ex)
-        {
-            logger.LogCritical($"{ex.Message}: {ex.StackTrace}");
-        }
-    }
-
-    private async Task StartHeartbeatAsync()
-    {
-        try
-        {
-            while (connected)
-            {
-                if(stream is null)
-                {
-                    return;
-                }
-
-                await Task.Delay(config.HeartbeatFrequency * 1000);
-
-                logger.LogInformation("Sending heartbeat..");
-
-                var packet = new HeartbeatPacket();
-                await stream.WriteAsync(packet.Serialize());
-
-                logger.LogInformation("Sent heartbeat.");
-
-                var memory = await PerformanceMonitor.MeasureMemoryAsync();
-                var statPacket = new StatisticPacket(LimeStatistic.RAM, memory.Min, memory.Max, memory.Current);
-                await stream.WriteAsync(statPacket.Serialize());
-            }
-        }
-        catch(Exception ex)
         {
             logger.LogCritical($"{ex.Message}: {ex.StackTrace}");
         }

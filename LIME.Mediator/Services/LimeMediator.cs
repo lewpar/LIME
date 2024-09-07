@@ -28,6 +28,8 @@ public partial class LimeMediator : BackgroundService
     private TcpListener listener;
     private X509Certificate2 certificate;
 
+    private System.Timers.Timer heartbeatTimer;
+
     public LimeMediator(LimeMediatorConfig config, ILogger<LimeMediator> logger)
     {
         this.logger = logger;
@@ -35,6 +37,9 @@ public partial class LimeMediator : BackgroundService
 
         listener = new TcpListener(IPAddress.Parse(config.Mediator.Listen.IPAddress), config.Mediator.Listen.Port);
         certificate = GetCertificate(config.Mediator.ServerCertificate.Thumbprint);
+
+        heartbeatTimer = new System.Timers.Timer(config.Mediator.HeartbeatCheckFrequency * 1000);
+        heartbeatTimer.Elapsed += HandleHeartbeatAsync;
 
         ConnectedClients = new List<LimeClient>();
         PacketHandlers = new Dictionary<LimeOpCodes, Func<LimeClient, Task>>()
@@ -59,65 +64,29 @@ public partial class LimeMediator : BackgroundService
     {
         cancellationToken = stoppingToken;
 
-        await StartServerAsync(stoppingToken);
-    }
+        heartbeatTimer.Start();
 
-    private async Task StartServerAsync(CancellationToken cancellationToken)
-    {
-        this.cancellationToken = cancellationToken;
-
-        listener.Start();
-
-        _ = StartListeningAsync();
-        _ = StartListeningForHeartbeatAsync();
+        await StartListeningAsync().ContinueWith(task =>
+        {
+            if (task.IsFaulted)
+            {
+                var exception = task.Exception;
+                if (exception is not null)
+                {
+                    logger.LogCritical($"{exception.Message}: {exception.StackTrace}");
+                }
+            }
+        });
     }
 
     private async Task StartListeningAsync()
     {
-        try
+        listener.Start();
+
+        while (!cancellationToken.IsCancellationRequested)
         {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                var client = await listener.AcceptTcpClientAsync();
-                _ = HandleAcceptConnectionAsync(client);
-            }
-        }
-        catch (Exception ex)
-        {
-            logger.LogCritical($"{ex.Message}: {ex.StackTrace}");
-        }
-    }
-
-    private async Task StartListeningForHeartbeatAsync()
-    {
-        try
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                await Task.Delay(config.Mediator.HeartbeatCheckFrequency * 1000);
-
-                if (ConnectedClients.Count < 1)
-                {
-                    continue;
-                }
-
-                var now = DateTimeOffset.Now;
-
-                foreach (var client in ConnectedClients)
-                {
-                    var diff = now - client.LastHeartbeat;
-                    if (diff.TotalSeconds > (config.Mediator.HeartbeatTimeout + config.Mediator.HeartbeatTimeoutMargin))
-                    {
-                        await DisconnectClientAsync(client, LimeDisconnectReason.Timeout);
-                    }
-                }
-
-                ConnectedClients.RemoveAll(client => client.State == LimeClientState.Disconnected);
-            }
-        }
-        catch (Exception ex)
-        {
-            logger.LogCritical($"{ex.Message}: {ex.StackTrace}");
+            var client = await listener.AcceptTcpClientAsync();
+            _ = HandleAcceptConnectionAsync(client);
         }
     }
 
