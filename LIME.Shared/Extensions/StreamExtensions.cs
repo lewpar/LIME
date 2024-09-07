@@ -20,9 +20,26 @@ public static class StreamExtensions
         return BitConverter.ToInt32(await ReadBytesAsync(stream, sizeof(int), cancellationToken));
     }
 
-    public static async Task<LimeOpCodes> ReadPacketTypeAsync(this SslStream stream)
+    public static async Task<long> ReadLongAsync(this SslStream stream, CancellationToken cancellationToken = default)
     {
-        return (LimeOpCodes)await ReadIntAsync(stream);
+        return BitConverter.ToInt64(await ReadBytesAsync(stream, sizeof(long), cancellationToken));
+    }
+
+    public static async Task<T?> ReadEnumAsync<T>(this SslStream stream) where T : struct, IConvertible
+    {
+        var value = await ReadIntAsync(stream);
+
+        if(!typeof(T).IsEnum)
+        {
+            return null;
+        }
+
+        if (!Enum.IsDefined(typeof(T), value))
+        {
+            return default;
+        }
+
+        return (T)(object)value;
     }
 
     public static async Task WriteBytesAsync(this SslStream stream, byte[] bytes)

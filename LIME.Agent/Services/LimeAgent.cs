@@ -1,6 +1,8 @@
 ﻿using LIME.Agent.Configuration;
 using LIME.Agent.Network.Packets;
+
 using LIME.Shared.Crypto;
+using LIME.Shared.Diagnostics;
 using LIME.Shared.Extensions;
 using LIME.Shared.Network;
 
@@ -135,16 +137,22 @@ public partial class LimeAgent : IHostedService
                     return;
                 }
 
-                var packetType = await stream.ReadPacketTypeAsync();
-
-                if (!PacketHandlers.ContainsKey(packetType))
+                var packetType = await stream.ReadEnumAsync<LimeOpCodes>();
+                if(packetType is null)
                 {
-                    logger.LogCritical($"Received invalid opcode '{(int)packetType}'. Disconnected.");
+                    logger.LogCritical($"Received invalid opcode. Disconnected.");
                     connected = false;
                     return;
                 }
 
-                await PacketHandlers[packetType].Invoke(stream);
+                if (!PacketHandlers.ContainsKey(packetType.Value))
+                {
+                    logger.LogCritical($"Received unregistered opcode '{(int)packetType}'. Disconnected.");
+                    connected = false;
+                    return;
+                }
+
+                await PacketHandlers[packetType.Value].Invoke(stream);
             }
         }
         catch (Exception ex)
@@ -172,6 +180,10 @@ public partial class LimeAgent : IHostedService
                 await stream.WriteAsync(packet.Serialize());
 
                 logger.LogInformation("Sent heartbeat.");
+
+                var memory = await PerformanceMonitor.MeasureMemoryAsync();
+                var statPacket = new StatisticPacket(LimeStatistic.RAM, memory.Min, memory.Max, memory.Current);
+                await stream.WriteAsync(statPacket.Serialize());
             }
         }
         catch(Exception ex)

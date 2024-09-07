@@ -1,6 +1,6 @@
 ﻿using LIME.Mediator.Network.Packets;
 using LIME.Shared.Network;
-
+using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 
@@ -16,10 +16,14 @@ public class LimeClient
     public TcpClient Socket { get; set; }
     public SslStream Stream { get; set; }
 
+    public LimeEndpoint Endpoint { get; set; }
+
     public LimeClient(TcpClient client, SslStream stream)
     {
         Socket = client;
         Stream = stream;
+
+        Endpoint = new LimeEndpoint(IPAddress.Any.MapToIPv4().ToString(), 0);
     }
 
     public async Task SendPacketAsync(ILimePacket packet)

@@ -39,7 +39,8 @@ public partial class LimeMediator : BackgroundService
         ConnectedClients = new List<LimeClient>();
         PacketHandlers = new Dictionary<LimeOpCodes, Func<LimeClient, Task>>()
         {
-            { LimeOpCodes.CMSG_HEARTBEAT, HandleHeartbeatAsync }
+            { LimeOpCodes.CMSG_HEARTBEAT, HandleHeartbeatAsync },
+            { LimeOpCodes.CMSG_STATISTIC, HandleStatisticAsync },
         };
     }
 
@@ -101,6 +102,7 @@ public partial class LimeMediator : BackgroundService
                 }
 
                 var now = DateTimeOffset.Now;
+
                 foreach (var client in ConnectedClients)
                 {
                     var diff = now - client.LastHeartbeat;
@@ -110,7 +112,6 @@ public partial class LimeMediator : BackgroundService
                     }
                 }
 
-                // Cleanup disconnected clients.
                 ConnectedClients.RemoveAll(client => client.State == LimeClientState.Disconnected);
             }
         }
@@ -144,14 +145,24 @@ public partial class LimeMediator : BackgroundService
         {
             var stream = new SslStream(client.GetStream(), false, ValidateClientCertificate);
 
+            var endpoint = new LimeEndpoint("0.0.0.0", 0);
+            var ipEndpoint = client.Client.RemoteEndPoint as IPEndPoint;
+
+            if (ipEndpoint is not null)
+            {
+                endpoint.IPAddress = ipEndpoint.Address.MapToIPv4().ToString();
+                endpoint.Port = ipEndpoint.Port;
+            }
+
             var limeClient = new LimeClient(client, stream)
             {
                 Guid = Guid.NewGuid(),
                 Stream = stream,
-                State = LimeClientState.Handshaking
+                State = LimeClientState.Handshaking,
+                Endpoint = endpoint
             };
 
-            logger.LogInformation($"Client '{limeClient.Guid}' authenticating..");
+            logger.LogInformation($"Client '{limeClient.Endpoint}' authenticating..");
 
             var authenticationResult = await AuthenticateAsync(limeClient);
             if (!authenticationResult.Success)
@@ -161,7 +172,7 @@ public partial class LimeMediator : BackgroundService
 
             ConnectedClients.Add(limeClient);
 
-            logger.LogInformation($"Client '{limeClient.Guid}' authenticated.");
+            logger.LogInformation($"Client '{limeClient.Endpoint}' authenticated.");
 
             limeClient.LastHeartbeat = DateTimeOffset.Now;
             limeClient.State = LimeClientState.Connected;
@@ -186,15 +197,20 @@ public partial class LimeMediator : BackgroundService
 
             while (client.State == LimeClientState.Connected)
             {
-                var packetType = await client.Stream.ReadPacketTypeAsync();
-
-                if (!PacketHandlers.ContainsKey(packetType))
+                var packetType = await client.Stream.ReadEnumAsync<LimeOpCodes>();
+                if(packetType is null)
                 {
                     await DisconnectClientAsync(client);
                     return;
                 }
 
-                await PacketHandlers[packetType].Invoke(client);
+                if (!PacketHandlers.ContainsKey(packetType.Value))
+                {
+                    await DisconnectClientAsync(client);
+                    return;
+                }
+
+                await PacketHandlers[packetType.Value].Invoke(client);
             }
         }
         catch (Exception ex)
@@ -213,13 +229,13 @@ public partial class LimeMediator : BackgroundService
         }
         catch (Exception ex)
         {
-            return new TaskResult(false, $"Failed to authenticate client '{client.Socket.Client.RemoteEndPoint}': {ex.Message}");
+            return new TaskResult(false, $"Failed to authenticate client '{client.Endpoint}': {ex.Message}");
         }
     }
 
     private async Task DisconnectClientAsync(LimeClient client, LimeDisconnectReason reason = LimeDisconnectReason.Unknown)
     {
         await client.DisconnectAsync($"{reason.ToString()}");
-        logger.LogInformation($"Client '{client.Guid}' disconnected: {reason.ToString()}");
+        logger.LogInformation($"Client '{client.Endpoint}' disconnected: {reason.ToString()}");
     }
 }

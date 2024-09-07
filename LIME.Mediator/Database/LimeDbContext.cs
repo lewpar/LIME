@@ -1,7 +1,7 @@
 ﻿namespace LIME.Mediator.Database;
 
 using LIME.Mediator.Configuration;
-using LIME.Shared.Database.Models;
+using LIME.Mediator.Database.Models;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

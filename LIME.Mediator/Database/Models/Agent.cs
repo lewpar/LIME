@@ -1,8 +1,8 @@
-﻿namespace LIME.Shared.Database.Models;
-
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 using System.ComponentModel.DataAnnotations.Schema;
+
+namespace LIME.Mediator.Database.Models;
 
 [Table("agents")]
 [PrimaryKey(nameof(Id))]
@@ -16,5 +16,8 @@ public class Agent
 
     [Column("address")]
     public string? Address { get; set; }
+
+    [Column("status")]
+    public AgentStatus Status { get; set; }
 }
 

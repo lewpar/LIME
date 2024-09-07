@@ -1,9 +1,9 @@
 using LIME.Mediator.Configuration;
 using LIME.Mediator.Database;
+using LIME.Mediator.Database.Models;
 using LIME.Mediator.Pages.Models;
 
 using LIME.Shared.Crypto;
-using LIME.Shared.Database.Models;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
