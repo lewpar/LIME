@@ -2,6 +2,7 @@
 
 using LIME.Shared.Crypto;
 using LIME.Shared.Extensions;
+using LIME.Shared.Models;
 using LIME.Shared.Network;
 
 using Microsoft.Extensions.Hosting;
@@ -34,6 +35,10 @@ public partial class LimeAgent : IHostedService
 
     private System.Timers.Timer heartbeatTimer;
 
+    private Queue<LimeTask> tasks;
+    private SemaphoreSlim taskSignal;
+    private System.Timers.Timer taskTimer;
+
     public LimeAgent(ILogger<LimeAgent> logger, LimeAgentConfig config)
     {
         this.logger = logger;
@@ -47,11 +52,17 @@ public partial class LimeAgent : IHostedService
         CheckCertificateRevocation = false;
         PacketHandlers = new Dictionary<LimeOpCodes, Func<SslStream, Task>>()
         {
-            { LimeOpCodes.SMSG_DISCONNECT, HandleDisconnectAsync }
+            { LimeOpCodes.SMSG_DISCONNECT, HandleDisconnectAsync },
+            { LimeOpCodes.SMSG_TASK, HandleTaskAsync }
         };
 
         client = new TcpClient();
         connected = false;
+
+        tasks = new Queue<LimeTask>();
+        taskSignal = new SemaphoreSlim(0);
+        taskTimer = new System.Timers.Timer(config.TaskFrequency * 1000);
+        taskTimer.Elapsed += ProcessQueueAsync;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -127,9 +138,10 @@ public partial class LimeAgent : IHostedService
         logger.LogInformation("Connected to mediator server.");
         connected = true;
 
-        _ = StartListeningForDataAsync();
-
         heartbeatTimer.Start();
+        taskTimer.Start();
+
+        _ = StartListeningForDataAsync();
     }
 
     private async Task StartListeningForDataAsync()
@@ -158,6 +170,7 @@ public partial class LimeAgent : IHostedService
                     return;
                 }
 
+                logger.LogInformation($"Received '{packetType}' packet, executing..");
                 await PacketHandlers[packetType.Value].Invoke(stream);
             }
         }
@@ -207,7 +220,7 @@ public partial class LimeAgent : IHostedService
         return false;
     }
 
-    public void LoadClientCertificate(string certificateThumbprint)
+    private void LoadClientCertificate(string certificateThumbprint)
     {
         var cert = LimeCertificate.GetCertificate(certificateThumbprint);
         if (cert is null)
@@ -216,5 +229,18 @@ public partial class LimeAgent : IHostedService
         }
 
         certificate = cert;
+    }
+
+    private async Task DisconnectAsync()
+    {
+        client.Close();
+        tasks.Clear();
+        connected = false;
+    }
+
+    private void QueueTask(LimeTask task)
+    {
+        tasks.Enqueue(task);
+        taskSignal.Release();
     }
 }

@@ -8,7 +8,7 @@ public class PerformanceMonitor
 {
     /// <summary>
     /// Asynchronously measures the current memory usage of the system by retrieving
-    /// the total visible memory and free physical memory on supported platforms.
+    /// the total visible memory and free physical memory.
     /// </summary>
     /// <remarks>
     /// This method retrieves system memory information to calculate used memory by 

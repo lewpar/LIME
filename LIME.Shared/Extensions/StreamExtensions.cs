@@ -1,6 +1,6 @@
-﻿using LIME.Shared.Network;
-using System.Net.Security;
-using System.Net.Sockets;
+﻿using System.Net.Security;
+
+using System.Runtime.InteropServices;
 
 namespace LIME.Shared.Extensions;
 
@@ -27,12 +27,12 @@ public static class StreamExtensions
 
     public static async Task<T?> ReadEnumAsync<T>(this SslStream stream) where T : struct, IConvertible
     {
-        var value = await ReadIntAsync(stream);
-
         if(!typeof(T).IsEnum)
         {
             return null;
         }
+
+        var value = await ReadIntAsync(stream);
 
         if (!Enum.IsDefined(typeof(T), value))
         {

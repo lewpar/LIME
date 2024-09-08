@@ -184,6 +184,7 @@ public partial class LimeMediator : BackgroundService
         }
         catch (Exception ex)
         {
+            await DisconnectClientAsync(client);
             logger.LogCritical($"{ex.Message}: {ex.StackTrace}");
         }
     }

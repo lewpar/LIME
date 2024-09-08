@@ -1,5 +1,7 @@
 ﻿using LIME.Mediator.Network;
+using LIME.Mediator.Network.Packets;
 using LIME.Shared.Extensions;
+using LIME.Shared.Models;
 using LIME.Shared.Network;
 using System.Timers;
 
@@ -24,7 +26,16 @@ public partial class LimeMediator
                 if (diff.TotalSeconds > config.Mediator.HeartbeatTimeout)
                 {
                     await DisconnectClientAsync(client, LimeDisconnectReason.Timeout);
+                    continue;
                 }
+
+                var packet = new TaskPacket(new LimeTask()
+                {
+                    Type = LimeTaskType.Statistics
+                });
+
+                logger.LogInformation("Sending statistic packet..");
+                await client.SendPacketAsync(packet);
             }
 
             ConnectedClients.RemoveAll(client => client.State == LimeClientState.Disconnected);

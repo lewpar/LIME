@@ -1,5 +1,6 @@
 ﻿using LIME.Mediator.Network.Packets;
 
+using LIME.Shared.Models;
 using LIME.Shared.Network;
 
 using System.Net;
@@ -44,6 +45,11 @@ public class LimeClient
     public LimeEndpoint Endpoint { get; set; }
 
     /// <summary>
+    /// Gets the queue of tasks scheduled to be sent to the client.
+    /// </summary>
+    public Queue<LimeTask> Tasks { get; private set; }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="LimeClient"/> class with the specified TCP client and SSL stream.
     /// </summary>
     /// <param name="client">The TCP client representing the connection.</param>
@@ -54,6 +60,8 @@ public class LimeClient
         Stream = stream;
 
         Endpoint = new LimeEndpoint(IPAddress.Any.MapToIPv4().ToString(), 0);
+
+        Tasks = new Queue<LimeTask>();
     }
 
     /// <summary>
@@ -89,5 +97,14 @@ public class LimeClient
             Socket.Close();
             State = LimeClientState.Disconnected;
         }
+    }
+
+    /// <summary>
+    /// Queues a <see cref="LimeTask">task</see> to be sent to the client.
+    /// </summary>
+    /// <param name="task">The task to be queued.</param>
+    public void QueueTask(LimeTask task)
+    {
+        Tasks.Enqueue(task);
     }
 }

@@ -13,6 +13,7 @@ public class LimeAgentConfig
     public int MediatorPort { get; set; }
 
     public int HeartbeatFrequency { get; set; }
+    public int TaskFrequency { get; set; }
 
     public CertificateIdentifier Certificate { get; set; }
 
@@ -23,6 +24,7 @@ public class LimeAgentConfig
         MediatorPort = 55123;
 
         HeartbeatFrequency = 15;
+        TaskFrequency = 3;
 
         Certificate = new CertificateIdentifier("Lime.Intermediate", "Lime.Agent");
     }
