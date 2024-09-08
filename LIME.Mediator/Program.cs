@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 using System.Net;
 using System.Numerics;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
@@ -19,6 +20,11 @@ internal class Program
     static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+
+        if(builder.Environment.IsDevelopment())
+        {
+            Directory.SetCurrentDirectory(Path.GetDirectoryName(Assembly.GetEntryAssembly()!.Location)!);
+        }
 
         await DotEnv.LoadAsync(Environment.CurrentDirectory);
 

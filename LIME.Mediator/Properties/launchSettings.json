@@ -2,7 +2,7 @@
   "profiles": {
     "LIME.Mediator": {
       "commandName": "Project",
-      "workingDirectory": "C:\\Lewis\\Projects\\C#\\LIME\\LIME.Mediator\\bin\\Debug\\net8.0",
+      "workingDirectory": "$(TargetDir)",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
