@@ -6,13 +6,13 @@
 
 <div>
     <div>Connected Agents</div>
-    @if(this.Model.Mediator.ConnectedClients.Count > 0)
+    @if(this.Model.Agents.Count > 0)
     {
-        foreach (var agent in this.Model.Mediator.ConnectedClients)
+        foreach (var agent in this.Model.Agents)
         {
             <div style="display: flex; flex-direction: column; gap: 0.5rem">
                 <div style="border: 1px solid black; padding: 0.5rem;">
-                    @agent.Socket.Client.RemoteEndPoint
+                    @agent.Guid @agent.Address @agent.Status
                 </div>
             </div>
         }

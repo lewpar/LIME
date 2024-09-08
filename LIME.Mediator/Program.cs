@@ -6,7 +6,7 @@ using LIME.Shared.Configuration;
 using LIME.Shared.Crypto;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging.Console;
+
 using System.Net;
 using System.Numerics;
 using System.Security.Cryptography;

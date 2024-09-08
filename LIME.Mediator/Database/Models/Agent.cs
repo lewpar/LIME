@@ -11,6 +11,9 @@ public class Agent
     [Column("id")]
     public int Id { get; set; }
 
+    [Column("guid")]
+    public Guid Guid { get; set; }
+
     [Column("name")]
     public string? Name { get; set; }
 

@@ -89,6 +89,8 @@ public class CreateAgentModel : PageModel
 
         await dbContext.Agents.AddAsync(new Agent()
         {
+            Status = AgentStatus.Unknown,
+            Guid = Guid.NewGuid(),
             Address = Model.IPAddress,
             Name = Model.Name
         });

@@ -12,6 +12,10 @@ using System.Net.Sockets;
 
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Authentication;
+using LIME.Mediator.Database;
+using Microsoft.EntityFrameworkCore;
+using LIME.Mediator.Database.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace LIME.Mediator.Services;
 
@@ -22,6 +26,7 @@ public partial class LimeMediator : BackgroundService
 
     private readonly LimeMediatorConfig config;
     private readonly ILogger<LimeMediator> logger;
+    private readonly IServiceProvider serviceProvider;
 
     private CancellationToken cancellationToken;
 
@@ -30,9 +35,10 @@ public partial class LimeMediator : BackgroundService
 
     private System.Timers.Timer heartbeatTimer;
 
-    public LimeMediator(LimeMediatorConfig config, ILogger<LimeMediator> logger)
+    public LimeMediator(LimeMediatorConfig config, ILogger<LimeMediator> logger, IServiceProvider serviceProvider)
     {
         this.logger = logger;
+        this.serviceProvider = serviceProvider;
         this.config = config;
 
         listener = new TcpListener(IPAddress.Parse(config.Mediator.Listen.IPAddress), config.Mediator.Listen.Port);
@@ -115,17 +121,24 @@ public partial class LimeMediator : BackgroundService
             var stream = new SslStream(client.GetStream(), false, ValidateClientCertificate);
 
             var endpoint = new LimeEndpoint("0.0.0.0", 0);
-            var ipEndpoint = client.Client.RemoteEndPoint as IPEndPoint;
 
+            var ipEndpoint = client.Client.RemoteEndPoint as IPEndPoint;
             if (ipEndpoint is not null)
             {
                 endpoint.IPAddress = ipEndpoint.Address.MapToIPv4().ToString();
                 endpoint.Port = ipEndpoint.Port;
             }
 
+            var agent = await GetAgentAsync(endpoint);
+            if(agent is null)
+            {
+                logger.LogCritical($"Agent '{endpoint.ToString()}' tried to connect but was not registered.");
+                return;
+            }
+
             var limeClient = new LimeClient(client, stream)
             {
-                Guid = Guid.NewGuid(),
+                Guid = agent.Guid,
                 Stream = stream,
                 State = LimeClientState.Handshaking,
                 Endpoint = endpoint
@@ -145,6 +158,8 @@ public partial class LimeMediator : BackgroundService
 
             limeClient.LastHeartbeat = DateTimeOffset.Now;
             limeClient.State = LimeClientState.Connected;
+
+            await UpdateAgentStatusAsync(limeClient, AgentStatus.Online);
 
             await StartListeningForDataAsync(limeClient);
         }
@@ -207,5 +222,51 @@ public partial class LimeMediator : BackgroundService
     {
         await client.DisconnectAsync($"{reason.ToString()}");
         logger.LogInformation($"Client '{client.Endpoint}' disconnected: {reason.ToString()}");
+
+        await UpdateAgentStatusAsync(client, AgentStatus.Offline);
+    }
+
+    private async Task UpdateAgentStatusAsync(LimeClient client, AgentStatus status)
+    {
+        using var scope = serviceProvider.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetService<LimeDbContext>();
+
+        if (dbContext is null)
+        {
+            return;
+        }
+
+        var agent = await dbContext.Agents.FirstOrDefaultAsync(a => a.Address == client.Endpoint.IPAddress);
+        if (agent is null)
+        {
+            return;
+        }
+
+        agent.Status = status;
+
+        int rowsChanged = await dbContext.SaveChangesAsync();
+        if(rowsChanged < 1)
+        {
+            logger.LogCritical($"Failed to update agent status for '{client.Guid}'.");
+        }
+    }
+
+    private async Task<Agent?> GetAgentAsync(LimeEndpoint endpoint)
+    {
+        using var scope = serviceProvider.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetService<LimeDbContext>();
+
+        if(dbContext is null)
+        {
+            return null;
+        }
+
+        var agent = await dbContext.Agents.FirstOrDefaultAsync(a => a.Address == endpoint.IPAddress);
+        if(agent is null)
+        {
+            return null;
+        }
+
+        return agent;
     }
 }
