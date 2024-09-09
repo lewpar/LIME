@@ -96,33 +96,16 @@ public partial class LimeMediator : BackgroundService
         }
     }
 
-    private async Task<bool> ValidateClientCertificateAsync(LimeEndpoint endpoint, object sender, X509Certificate? clientCertificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
+    private bool ValidateClientCertificate(object sender, X509Certificate? clientCertificate, string expectedThumbprint, LimeEndpoint endpoint, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
     {
         try
         {
             if(clientCertificate is null)
             {
-                logger.LogCritical($"No client certificate was found to validate for endpoint '{endpoint}'.");
                 return false;
             }
 
-            using var scope = serviceProvider.CreateAsyncScope();
-            var dbContext = scope.ServiceProvider.GetService<LimeDbContext>();
-
-            if(dbContext is null)
-            {
-                logger.LogCritical($"Failed to get database context instance while validating client certificate for endpoint '{endpoint}'.");
-                return false;
-            }
-
-            var agent = await GetAgentAsync(endpoint);
-            if (agent is null)
-            {
-                logger.LogCritical($"Failed to get agent from database while validating client certificate '{endpoint}'.");
-                return false;
-            }
-
-            if(agent.Thumbprint != new X509Certificate2(clientCertificate).Thumbprint)
+            if(new X509Certificate2(clientCertificate).Thumbprint != expectedThumbprint)
             {
                 logger.LogCritical($"Endpoint '{endpoint}' tried connected with invalid thumbprint.");
                 return false;
@@ -150,16 +133,30 @@ public partial class LimeMediator : BackgroundService
                 endpoint.Port = ipEndpoint.Port;
             }
 
-            var stream = new SslStream(client.GetStream(), false, (sender, certificate, chain, sslPolicyErrors) => {
-                return ValidateClientCertificateAsync(endpoint, sender, certificate, chain, sslPolicyErrors).GetAwaiter().GetResult();
-            });
+            using var scope = serviceProvider.CreateAsyncScope();
+            var dbContext = scope.ServiceProvider.GetService<LimeDbContext>();
+            if (dbContext is null)
+            {
+                logger.LogCritical($"Failed to get database context instance while validating client certificate for endpoint '{endpoint}'.");
+                return;
+            }
 
             var agent = await GetAgentAsync(endpoint);
-            if(agent is null)
+            if (agent is null)
             {
                 logger.LogCritical($"Agent '{endpoint.ToString()}' tried to connect but was not registered.");
                 return;
             }
+
+            if(string.IsNullOrWhiteSpace(agent.Thumbprint))
+            {
+                logger.LogCritical($"No certificate thumbprint was configured for agent '{agent.Guid}'.");
+                return;
+            }
+
+            var stream = new SslStream(client.GetStream(), false, (sender, certificate, chain, sslPolicyErrors) => {
+                return ValidateClientCertificate(sender, certificate, agent.Thumbprint, endpoint, chain, sslPolicyErrors);
+            });
 
             var limeClient = new LimeClient(client, stream)
             {
