@@ -5,22 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - LIME.Mediator</title>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/LIME.Mediator.styles.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
     <div class="main">
         <header class="sidebar">
+            <img src="~/icons/icon.png" width="64" height="64" />
             <nav>
-                <div>
-                    <a asp-area="" asp-page="/Index">Dashboard</a>
-                    <div>
-                        <ul class="sidebar-menu">
-                            <li class="sidebar-menu-item">
-                                <a asp-area="" asp-page="/CreateAgent">Create Agent</a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+                <ul class="sidebar-menu">
+                    <a class="sidebar-menu-item" asp-area="" asp-page="/Index"><li>Dashboard</li></a>
+                    <a class="sidebar-menu-item" asp-area="" asp-page="/CreateAgent"><li>Create Agent</li></a>
+                </ul>
             </nav>
         </header>
         <main role="main" class="page">

@@ -4,21 +4,74 @@
     ViewData["Title"] = "Home page";
 }
 
-<div>
-    <div>Connected Agents</div>
-    @if(this.Model.Agents.Count > 0)
-    {
-        foreach (var agent in this.Model.Agents)
+@section Styles {
+    <link rel="stylesheet" href="~/css/index.css" asp-append-version="true" />
+}
+
+<div class="root-container">
+    <div style="font-weight: bold; font-size: 1.15rem">Agents</div>
+    <table class="agents-container" style="display: table; table-layout: fixed">
+        @if (this.Model.Agents.Count < 1)
         {
-            <div style="display: flex; flex-direction: column; gap: 0.5rem">
-                <div style="border: 1px solid black; padding: 0.5rem;">
-                    @agent.Name @agent.Guid @agent.Address @agent.Status
-                </div>
-            </div>
+            <tr><th>No agents connected.</th></tr>
         }
-    }
-    else
-    {
-        <div>No agents connected.</div>
-    }
+        else
+        {
+            <tr>
+                <th>Name</th>
+                <th>IPv4</th>
+                <th>Identifier</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        }
+
+        @foreach (var agent in this.Model.Agents)
+        {
+            <tr>
+                <td>
+                    @agent.Name
+                </td>
+
+                <td>
+                    <div style="display: flex; gap: 0.5rem">
+                        @if (string.IsNullOrWhiteSpace(agent.Address))
+                        {
+                            <span>Unknown</span>
+                        }
+                        else
+                        {
+                            <span>@agent.Address</span>
+                            <a class="agent-hyperlink" href="#" onclick="copyToClipboard('@(agent.Address.ToString().Trim())')">
+                                <img src="~/icons/copy-dark.svg" />
+                            </a>
+                        }
+                    </div>
+                </td>
+
+                <td>
+                    <div style ="display: flex; gap: 0.5rem">
+                            <span>@agent.Guid</span>
+                            <a class="agent-hyperlink" href="#" onclick="copyToClipboard('@(agent.Guid.ToString().Trim())')">
+                                <img src="~/icons/copy-dark.svg" />
+                            </a>
+                    </div>
+                </td>
+
+                <td>
+                    <div class="agent-status-@(agent.Status.ToString().ToLower())">
+                        @(agent.Status == Database.Models.AgentStatus.Unknown ? "Pending" : agent.Status)
+                    </div>
+                </td>
+
+                <td>
+                    <a class="agent-hyperlink" style="justify-content: center" href="#">View ></a>
+                </td>
+            </tr>
+        }
+    </table>
+
+    <a asp-area="" asp-page="/CreateAgent" style="display: flex; border: 2px dotted #505050; padding: 0.5rem; align-items: center; justify-content: center; text-decoration: none; color: white; background-color: #303030">
+        + Create Agent
+    </a>
 </div>

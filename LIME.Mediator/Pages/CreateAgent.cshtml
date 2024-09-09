@@ -3,30 +3,38 @@
 @{
     ViewData["Title"] = "Create agent";
 }
+@section Styles {
+    <link rel="stylesheet" href="~/css/agent.css" asp-append-version="true" />
+}
 
+<div class="root-container">
+    <form class="form-agent-create" method="POST">
+        <div class="form-agent-create-item">
+            <span style="font-weight: bold; font-size: 1rem; align-self: center">Create Agent</span>
+        </div>
 
-<form method="POST" style="display: flex; flex-direction: column; gap: 0.5rem">
-    <div style="display: flex; flex-direction: column; gap: 0.25rem">
-        <label asp-for="Model.Name"></label>
-        <input asp-for="Model.Name"/>
-        <span asp-validation-for="Model.Name" class="text-danger"></span>
-    </div>
+        <div class="form-agent-create-item">
+            <label asp-for="Model.Name">Agent Name</label>
+            <input asp-for="Model.Name" placeholder="Agent Name.." />
+            <span asp-validation-for="Model.Name" class="text-danger"></span>
+        </div>
 
-    <div style="display: flex; flex-direction: column; gap: 0.25rem">
-        <label asp-for="Model.IPAddress"></label>
-        <input asp-for="Model.IPAddress" />
-        <span asp-validation-for="Model.IPAddress" class="text-danger"></span>
-    </div>
+        <div class="form-agent-create-item">
+            <label asp-for="Model.IPAddress">Agent IP Address</label>
+            <input asp-for="Model.IPAddress" placeholder="Agent IP Address.." />
+            <span asp-validation-for="Model.IPAddress" class="text-danger"></span>
+        </div>
 
-    <button type="submit">Create Agent</button>
+        <button type="submit">Create</button>
 
-    @if(!string.IsNullOrWhiteSpace(this.Model.ErrorMessage))
-    {
-        <span class="text-danger">@this.Model.ErrorMessage</span>
-    }
+        @if (!string.IsNullOrWhiteSpace(this.Model.ErrorMessage))
+        {
+            <span class="status-danger">@this.Model.ErrorMessage</span>
+        }
 
-    @if (!string.IsNullOrWhiteSpace(this.Model.StatusMessage))
-    {
-        <span class="text-info">@this.Model.StatusMessage</span>
-    }
-</form>
+        @if (!string.IsNullOrWhiteSpace(this.Model.StatusMessage))
+        {
+            <span class="text-info">@this.Model.StatusMessage</span>
+        }
+    </form>
+</div>

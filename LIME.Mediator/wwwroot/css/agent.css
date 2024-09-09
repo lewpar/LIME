@@ -1,0 +1,46 @@
+﻿.root-container {
+    flex: 1;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+}
+
+.form-agent-create {
+    display: flex; 
+    flex-direction: column; 
+    
+    gap: 1rem
+}
+
+.form-agent-create-item {
+    display: flex; 
+    flex-direction: column; 
+    
+    gap: 0.25rem
+}
+
+.form-agent-create-item input {
+    padding: 0.75rem;
+
+    border: 1px solid #424242;
+    border-radius: 0;
+
+    color: white;
+    background-color: #242424;
+}
+.form-agent-create-item input::placeholder {
+    color: #585858;
+}
+
+.form-agent-create button {
+    padding: 0.5rem;
+
+    border: 1px solid #6185E2;
+    border-radius: 0;
+
+    color: white;
+    background-color: #2455D1;
+}

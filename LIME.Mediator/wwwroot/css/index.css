@@ -1,0 +1,89 @@
+﻿.root-container {
+    flex: 1;
+    
+    display: flex;
+    flex-direction: column;
+
+    gap: 1rem;
+}
+
+.agents-container {
+    display: flex;
+    flex-direction: column;
+
+    gap: 1rem;
+
+    border: 1px solid #424242;
+}
+
+.agents-container th {
+    background-color: #303030;
+
+    text-align: left;
+    padding: 0.5rem;
+}
+
+.agents-container tr {
+    border: 1px solid black;
+}
+.agents-container tr td {
+    padding: 0.5rem;
+}
+.agents-container tr:nth-child(odd) {
+    background-color: #353535;
+}
+.agents-container tr:nth-child(even) {
+    background-color: #404040;
+}
+
+.agent-card {
+    display: flex;
+    flex-direction: row;
+
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 0.5rem;
+
+    border: 2px solid #242424;
+    border-radius: 0.2rem;
+
+    background-color: #383838;
+}
+
+.agent-hyperlink {
+    display: flex;
+
+    color: white;
+    text-decoration: none;
+}
+
+.agent-status-online {
+    display: flex;
+    justify-content: center;
+
+    padding: 0.3rem;
+    background-color: #3BCB49;
+
+    border-radius: 0.25rem;
+}
+
+.agent-status-offline {
+    display: flex;
+    justify-content: center;
+
+    padding: 0.3rem;
+    background-color: #CB3B3B;
+
+    border-radius: 0.25rem;
+}
+
+.agent-status-unknown {
+    display: flex;
+    justify-content: center;
+
+    padding: 0.3rem;
+    background-color: #943BCB;
+
+    border-radius: 0.25rem;
+}
