@@ -1,13 +1,12 @@
 ﻿using LIME.Agent.Network.Packets;
 
-using LIME.Shared.Diagnostics;
 using LIME.Shared.Extensions;
 using LIME.Shared.Models;
-using LIME.Shared.Network;
 
 using Microsoft.Extensions.Logging;
 
 using System.Net.Security;
+
 using System.Text;
 using System.Timers;
 
@@ -37,18 +36,6 @@ public partial class LimeAgent
         }
     }
 
-    private async Task SendStatisticsAsync(SslStream stream)
-    {
-        logger.LogInformation("Sending statistics..");
-
-        var memory = await PerformanceMonitor.MeasureMemoryAsync();
-
-        var packet = new StatisticPacket(LimeStatistic.RAM, memory.Min, memory.Max, memory.Current);
-        await stream.WriteAsync(packet.Serialize());
-
-        logger.LogInformation("Sent statistics.");
-    }
-
     private async Task HandleDisconnectAsync(SslStream stream)
     {
         var dataLength = await stream.ReadIntAsync();
@@ -72,9 +59,13 @@ public partial class LimeAgent
 
         if(taskType != LimeTaskType.Execute)
         {
-            QueueTask(new LimeTask()
+            taskQueue.Enqueue(new TaskContext()
             {
-                Type = taskType.Value
+                Task = new LimeTask()
+                {
+                    Type = taskType.Value
+                },
+                Stream = stream
             });
 
             return;
@@ -93,51 +84,14 @@ public partial class LimeAgent
 
         var args = Encoding.UTF8.GetString(argsBuf);
 
-        QueueTask(new LimeTask()
+        taskQueue.Enqueue(new TaskContext()
         {
-            Type = taskType.Value,
-            Args = args
+            Task = new LimeTask()
+            {
+                Type = taskType.Value,
+                Args = args
+            },
+            Stream = stream
         });
-    }
-
-    private async void ProcessQueueAsync(object? sender, ElapsedEventArgs e)
-    {
-        try
-        {
-            if(!connected)
-            {
-                taskTimer.Stop();
-                return;
-            }
-
-            await taskSignal.WaitAsync();
-
-            if (tasks.TryDequeue(out LimeTask? task))
-            {
-                logger.LogInformation($"Executing task '{task.Type}'.");
-
-                await ExecuteTaskAsync(task);
-            }
-        }
-        catch (Exception ex)
-        {
-            logger.LogCritical($"{ex.Message}: {ex.StackTrace}");
-        }
-    }
-
-    private async Task ExecuteTaskAsync(LimeTask task)
-    {
-        switch(task.Type)
-        {
-            case LimeTaskType.Statistics:
-                if(stream is null)
-                {
-                    logger.LogCritical($"Failed to execute task '{task.Type}': stream is null.");
-                    return;
-                }
-
-                await SendStatisticsAsync(stream);
-                break;
-        }
     }
 }

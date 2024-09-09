@@ -1,5 +1,4 @@
 ﻿using LIME.Agent.Configuration;
-
 using LIME.Shared.Crypto;
 using LIME.Shared.Extensions;
 using LIME.Shared.Models;
@@ -32,17 +31,14 @@ public partial class LimeAgent : IHostedService
 
     private readonly ILogger<LimeAgent> logger;
     private readonly LimeAgentConfig config;
-
+    private readonly TaskQueue taskQueue;
     private System.Timers.Timer heartbeatTimer;
 
-    private Queue<LimeTask> tasks;
-    private SemaphoreSlim taskSignal;
-    private System.Timers.Timer taskTimer;
-
-    public LimeAgent(ILogger<LimeAgent> logger, LimeAgentConfig config)
+    public LimeAgent(ILogger<LimeAgent> logger, LimeAgentConfig config, TaskQueue taskQueue)
     {
         this.logger = logger;
         this.config = config;
+        this.taskQueue = taskQueue;
 
         heartbeatTimer = new System.Timers.Timer(config.HeartbeatFrequency * 1000);
         heartbeatTimer.Elapsed += HandleHeartbeatAsync;
@@ -58,11 +54,6 @@ public partial class LimeAgent : IHostedService
 
         client = new TcpClient();
         connected = false;
-
-        tasks = new Queue<LimeTask>();
-        taskSignal = new SemaphoreSlim(0);
-        taskTimer = new System.Timers.Timer(config.TaskFrequency * 1000);
-        taskTimer.Elapsed += ProcessQueueAsync;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -139,7 +130,6 @@ public partial class LimeAgent : IHostedService
         connected = true;
 
         heartbeatTimer.Start();
-        taskTimer.Start();
 
         _ = StartListeningForDataAsync();
     }
@@ -170,7 +160,7 @@ public partial class LimeAgent : IHostedService
                     return;
                 }
 
-                logger.LogInformation($"Received '{packetType}' packet, executing..");
+                logger.LogInformation($"Received '{packetType}' packet.");
                 await PacketHandlers[packetType.Value].Invoke(stream);
             }
         }
@@ -234,13 +224,6 @@ public partial class LimeAgent : IHostedService
     private async Task DisconnectAsync()
     {
         client.Close();
-        tasks.Clear();
         connected = false;
-    }
-
-    private void QueueTask(LimeTask task)
-    {
-        tasks.Enqueue(task);
-        taskSignal.Release();
     }
 }

@@ -3,6 +3,7 @@ using LIME.Agent.Services;
 
 using LIME.Shared.Configuration;
 using LIME.Shared.Crypto;
+using LIME.Shared.Models;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -29,6 +30,9 @@ internal class Program
     private static async Task ConfigureServicesAsync(IServiceCollection services)
     {
         await ConfigureConfigAsync(services);
+
+        services.AddSingleton<TaskQueue>();
+        services.AddHostedService<TaskProcessor>();
 
         services.AddHostedService<LimeAgent>();
     }
