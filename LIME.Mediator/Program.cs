@@ -21,11 +21,6 @@ internal class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        if(builder.Environment.IsDevelopment())
-        {
-            Directory.SetCurrentDirectory(Path.GetDirectoryName(Assembly.GetEntryAssembly()!.Location)!);
-        }
-
         await DotEnv.LoadAsync(Environment.CurrentDirectory);
 
         DotEnv.Ensure("MYSQL_CONNECTION");

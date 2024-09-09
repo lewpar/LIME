@@ -4,6 +4,7 @@ using LIME.Mediator.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LIME.Mediator.Migrations
 {
     [DbContext(typeof(LimeDbContext))]
-    partial class LimeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240909050640_AddThumbprintColumnToAgentsTable")]
+    partial class AddThumbprintColumnToAgentsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -96,16 +96,39 @@ public partial class LimeMediator : BackgroundService
         }
     }
 
-    private bool ValidateClientCertificate(object sender, X509Certificate? clientCertificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
+    private async Task<bool> ValidateClientCertificateAsync(LimeEndpoint endpoint, object sender, X509Certificate? clientCertificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
     {
         try
         {
-            if (sslPolicyErrors == SslPolicyErrors.None)
+            if(clientCertificate is null)
             {
-                return true;
+                logger.LogCritical($"No client certificate was found to validate for endpoint '{endpoint}'.");
+                return false;
             }
 
-            return false;
+            using var scope = serviceProvider.CreateAsyncScope();
+            var dbContext = scope.ServiceProvider.GetService<LimeDbContext>();
+
+            if(dbContext is null)
+            {
+                logger.LogCritical($"Failed to get database context instance while validating client certificate for endpoint '{endpoint}'.");
+                return false;
+            }
+
+            var agent = await GetAgentAsync(endpoint);
+            if (agent is null)
+            {
+                logger.LogCritical($"Failed to get agent from database while validating client certificate '{endpoint}'.");
+                return false;
+            }
+
+            if(agent.Thumbprint != new X509Certificate2(clientCertificate).Thumbprint)
+            {
+                logger.LogCritical($"Endpoint '{endpoint}' tried connected with invalid thumbprint.");
+                return false;
+            }
+
+            return sslPolicyErrors == SslPolicyErrors.None;
         }
         catch (Exception ex)
         {
@@ -118,8 +141,6 @@ public partial class LimeMediator : BackgroundService
     {
         try
         {
-            var stream = new SslStream(client.GetStream(), false, ValidateClientCertificate);
-
             var endpoint = new LimeEndpoint("0.0.0.0", 0);
 
             var ipEndpoint = client.Client.RemoteEndPoint as IPEndPoint;
@@ -128,6 +149,10 @@ public partial class LimeMediator : BackgroundService
                 endpoint.IPAddress = ipEndpoint.Address.MapToIPv4().ToString();
                 endpoint.Port = ipEndpoint.Port;
             }
+
+            var stream = new SslStream(client.GetStream(), false, (sender, certificate, chain, sslPolicyErrors) => {
+                return ValidateClientCertificateAsync(endpoint, sender, certificate, chain, sslPolicyErrors).GetAwaiter().GetResult();
+            });
 
             var agent = await GetAgentAsync(endpoint);
             if(agent is null)

@@ -2,7 +2,6 @@
   "profiles": {
     "LIME.Mediator": {
       "commandName": "Project",
-      "workingDirectory": "$(TargetDir)",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

@@ -22,5 +22,8 @@ public class Agent
 
     [Column("status")]
     public AgentStatus Status { get; set; }
+
+    [Column("thumbprint")]
+    public string? Thumbprint { get; set; }
 }
 

@@ -92,7 +92,8 @@ public class CreateAgentModel : PageModel
             Status = AgentStatus.Unknown,
             Guid = Guid.NewGuid(),
             Address = Model.IPAddress,
-            Name = Model.Name
+            Name = Model.Name,
+            Thumbprint = agentCert.Thumbprint
         });
 
         var rows = await dbContext.SaveChangesAsync();

@@ -6,6 +6,9 @@
 # dotenv files
 .env
 
+# Mediator files
+mediator.json
+
 # User-specific files
 *.rsuser
 *.suo
