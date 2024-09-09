@@ -1,0 +1,16 @@
+﻿@page "/Agent/View/{Guid?}"
+@model LIME.Mediator.Pages.Agent.ViewAgentModel
+@{
+}
+
+@if(!string.IsNullOrWhiteSpace(this.Model.Error))
+{
+    <span>@this.Model.Error</span>
+}
+
+@if(this.Model.Agent is not null)
+{
+    var agent = this.Model.Agent;
+
+    <span>@agent.Name</span>
+}

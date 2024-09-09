@@ -65,13 +65,13 @@
                 </td>
 
                 <td>
-                    <a class="agent-hyperlink" style="justify-content: center" href="#">View ></a>
+                    <a asp-page="/Agent/ViewAgent" asp-route-Guid="@(agent.Guid.ToString())" class="agent-hyperlink" style="justify-content: center">View ></a>
                 </td>
             </tr>
         }
     </table>
 
-    <a asp-area="" asp-page="/CreateAgent" style="display: flex; border: 2px dotted #505050; padding: 0.5rem; align-items: center; justify-content: center; text-decoration: none; color: white; background-color: #303030">
+    <a asp-area="" asp-page="/Agent/CreateAgent" style="display: flex; border: 2px dotted #505050; padding: 0.5rem; align-items: center; justify-content: center; text-decoration: none; color: white; background-color: #303030">
         + Create Agent
     </a>
 </div>

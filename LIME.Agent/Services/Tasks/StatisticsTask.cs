@@ -1,8 +1,7 @@
 ﻿using LIME.Agent.Network.Packets;
+
 using LIME.Shared.Diagnostics;
 using LIME.Shared.Network;
-
-using Microsoft.Extensions.Logging;
 
 namespace LIME.Agent.Services.Tasks;
 

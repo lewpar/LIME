@@ -87,7 +87,7 @@ public class CreateAgentModel : PageModel
             return Page();
         }
 
-        await dbContext.Agents.AddAsync(new Agent()
+        await dbContext.Agents.AddAsync(new Database.Models.Agent()
         {
             Status = AgentStatus.Unknown,
             Guid = Guid.NewGuid(),
