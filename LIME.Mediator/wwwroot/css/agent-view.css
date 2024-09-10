@@ -1,0 +1,30 @@
+﻿.root-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    gap: 1rem;
+}
+
+.root-container table {
+    border: 1px solid #424242;
+}
+.root-container th {
+    background-color: #303030;
+
+    text-align: left;
+    padding: 0.5rem;
+}
+
+.root-container tr {
+    border: 1px solid black;
+}
+.root-container tr td {
+    padding: 0.5rem;
+}
+.root-container tr:nth-child(odd) {
+    background-color: #353535;
+}
+.root-container tr:nth-child(even) {
+    background-color: #404040;
+}

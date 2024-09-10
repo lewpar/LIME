@@ -1,7 +1,7 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Dashboard";
 }
 
 @section Styles {
@@ -65,10 +65,21 @@
                 </td>
 
                 <td>
-                    <a asp-page="/Agent/ViewAgent" asp-route-Guid="@(agent.Guid.ToString())" class="agent-hyperlink" style="justify-content: center">View ></a>
+                    <a asp-page="/Agent/ViewAgent" asp-route-Guid="@(agent.Guid.ToString())" class="hyperlink">View ></a>
                 </td>
             </tr>
         }
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>
+                <a asp-area="" asp-page="/Agent/ViewAgents" class="hyperlink">
+                    View All >
+                </a>
+            </td>
+        </tr>
     </table>
 
     <a asp-area="" asp-page="/Agent/CreateAgent" style="display: flex; border: 2px dotted #505050; padding: 0.5rem; align-items: center; justify-content: center; text-decoration: none; color: white; background-color: #303030">

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - LIME.Mediator</title>
+    <title>@ViewData["Title"] | LIME</title>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -13,8 +13,14 @@
             <img src="~/icons/icon.png" width="64" height="64" />
             <nav>
                 <ul class="sidebar-menu">
-                    <a class="sidebar-menu-item" asp-area="" asp-page="/Index"><li>Dashboard</li></a>
-                    <a class="sidebar-menu-item" asp-area="" asp-page="/Agent/CreateAgent"><li>Create Agent</li></a>
+                    <a class="sidebar-menu-item" asp-area="" asp-page="/Index">
+                        <img src="~/icons/dashboard-dark.svg"/>
+                        <li>Dashboard</li>
+                    </a>
+                    <a class="sidebar-menu-item" asp-area="" asp-page="/Agent/ViewAgents">
+                        <img src="~/icons/bot-dark.svg" />
+                        <li>Agents</li>
+                    </a>
                 </ul>
             </nav>
         </header>

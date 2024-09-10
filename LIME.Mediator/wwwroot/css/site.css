@@ -50,7 +50,9 @@ body {
 .sidebar-menu-item {
     display: flex;
 
-    padding: 0.5rem 2rem;
+    gap: 0.5rem;
+
+    padding: 1rem 2rem;
 
     text-decoration: none;
 
@@ -101,4 +103,43 @@ body {
     border-radius: 0;
 
     padding: 0.5rem;
+}
+
+.agent-status-online {
+    display: flex;
+    justify-content: center;
+
+    padding: 0.3rem;
+    background-color: #3BCB49;
+
+    border-radius: 0.25rem;
+}
+
+.agent-status-offline {
+    display: flex;
+    justify-content: center;
+
+    padding: 0.3rem;
+    background-color: #CB3B3B;
+
+    border-radius: 0.25rem;
+}
+
+.agent-status-unknown {
+    display: flex;
+    justify-content: center;
+
+    padding: 0.3rem;
+    background-color: #943BCB;
+
+    border-radius: 0.25rem;
+}
+
+.hyperlink {
+    display: flex;
+
+    justify-content: center;
+
+    color: white;
+    text-decoration: none;
 }

@@ -1,7 +1,7 @@
-﻿@page "/Agent/View/{Guid?}"
-@model LIME.Mediator.Pages.Agent.ViewAgentModel
+﻿@page "/Agents"
+@model LIME.Mediator.Pages.Agent.ViewAgentsModel
 @{
-    ViewData["Title"] = "Agent";
+    ViewData["Title"] = "Agents";
 }
 
 @section Styles {
@@ -9,23 +9,25 @@
 }
 
 <div class="root-container">
-@if(!string.IsNullOrWhiteSpace(this.Model.Error))
-{
-    <span>@this.Model.Error</span>
-}
-
-@if(this.Model.Agent is not null)
-{
-    var agent = this.Model.Agent;
-
-        <table>
+    <div style="font-weight: bold; font-size: 1.15rem">Agents (@(this.Model.Agents.Count))</div>
+    <table class="agents-container" style="display: table; table-layout: fixed">
+        @if (this.Model.Agents.Count < 1)
+        {
+            <tr><th>No agents connected.</th></tr>
+        }
+        else
+        {
             <tr>
                 <th>Name</th>
                 <th>IPv4</th>
                 <th>Identifier</th>
                 <th>Status</th>
+                <th>Actions</th>
             </tr>
+        }
 
+        @foreach (var agent in this.Model.Agents)
+        {
             <tr>
                 <td>
                     @agent.Name
@@ -61,7 +63,15 @@
                         @(agent.Status == Database.Models.AgentStatus.Unknown ? "Pending" : agent.Status)
                     </div>
                 </td>
+
+                <td>
+                    <a asp-page="/Agent/ViewAgent" asp-route-Guid="@(agent.Guid.ToString())" class="hyperlink">View ></a>
+                </td>
             </tr>
-        </table>
-}
+        }
+    </table>
+
+    <a asp-area="" asp-page="/Agent/CreateAgent" style="display: flex; border: 2px dotted #505050; padding: 0.5rem; align-items: center; justify-content: center; text-decoration: none; color: white; background-color: #303030">
+        + Create Agent
+    </a>
 </div>
