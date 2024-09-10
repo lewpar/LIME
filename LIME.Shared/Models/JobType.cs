@@ -1,7 +1,6 @@
 ﻿namespace LIME.Shared.Models;
 
-public enum LimeTaskType
+public enum JobType
 {
-    Execute,
     Statistics
 }

@@ -7,6 +7,7 @@ using LIME.Shared.Crypto;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+
 using Microsoft.EntityFrameworkCore;
 
 using System.Security.Cryptography.X509Certificates;
@@ -20,6 +21,7 @@ public class CreateAgentModel : PageModel
 
     public string StatusMessage { get; set; } = string.Empty;
     public string ErrorMessage { get; set; } = string.Empty;
+    public string Certificate { get; set; } = string.Empty;
 
     [BindProperty]
     public CreateAgentDto Model { get; set; } = default!;
@@ -103,8 +105,10 @@ public class CreateAgentModel : PageModel
             return Page();
         }
 
-        StatusMessage = "Created agent. Install the downloaded certificate on the agent to allow connection to the mediator.";
+        StatusMessage = "Agent created successfully. Install the certificate below on the agent to enable connection to the mediator.";
 
-        return File(pfx, "application/x-pkcs12", $"agent.pfx");
+        Certificate = LimeCertificate.ConvertCertificateChainToPem(chain, agentCert);
+
+        return Page();
     }
 }

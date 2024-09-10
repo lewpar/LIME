@@ -1,8 +1,10 @@
 ﻿using LIME.Mediator.Network;
 using LIME.Mediator.Network.Packets;
+
 using LIME.Shared.Extensions;
 using LIME.Shared.Models;
 using LIME.Shared.Network;
+
 using System.Timers;
 
 namespace LIME.Mediator.Services;
@@ -29,10 +31,7 @@ public partial class LimeMediator
                     continue;
                 }
 
-                var packet = new TaskPacket(new LimeTask()
-                {
-                    Type = LimeTaskType.Statistics
-                });
+                var packet = new JobPacket(JobType.Statistics);
 
                 logger.LogInformation("Sending statistic packet..");
                 await client.SendPacketAsync(packet);
@@ -48,6 +47,8 @@ public partial class LimeMediator
 
     private async Task HandleHeartbeatAsync(LimeClient client)
     {
+        await Task.Delay(1);
+
         client.LastHeartbeat = DateTimeOffset.Now;
 
         logger.LogInformation($"Received heartbeat from '{client.Endpoint.ToString()}' at '{client.LastHeartbeat}'.");

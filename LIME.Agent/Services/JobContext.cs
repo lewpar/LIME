@@ -4,8 +4,9 @@ using System.Net.Security;
 
 namespace LIME.Agent.Services;
 
-public class TaskContext
+public class JobContext
 {
-    public required LimeTask Task { get; set; }
+    public JobType Type { get; set; }
+
     public required SslStream Stream { get; set; }
 }

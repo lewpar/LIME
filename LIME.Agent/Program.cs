@@ -31,8 +31,8 @@ internal class Program
     {
         await ConfigureConfigAsync(services);
 
-        services.AddSingleton<TaskQueue>();
-        services.AddHostedService<TaskProcessor>();
+        services.AddSingleton<JobQueue>();
+        services.AddHostedService<JobProcessor>();
 
         services.AddHostedService<LimeAgent>();
     }

@@ -5,9 +5,9 @@ using LIME.Shared.Network;
 
 namespace LIME.Agent.Services.Tasks;
 
-public class StatisticsTask : ILimeTask
+public class StatisticsJob : IJob
 {
-    public async Task ExecuteAsync(TaskContext context)
+    public async Task ExecuteAsync(JobContext context)
     {
         var stream = context.Stream;
 

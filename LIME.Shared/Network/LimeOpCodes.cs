@@ -5,6 +5,6 @@ public enum LimeOpCodes
     CMSG_HEARTBEAT,
     CMSG_STATISTIC,
 
-    SMSG_TASK,
+    SMSG_JOB,
     SMSG_DISCONNECT
 }

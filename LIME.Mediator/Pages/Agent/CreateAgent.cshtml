@@ -27,7 +27,10 @@
             <span asp-validation-for="Model.IPAddress" class="text-danger"></span>
         </div>
 
-        <button type="submit">Create</button>
+        @if (string.IsNullOrWhiteSpace(this.Model.Certificate))
+        {
+            <button type="submit">Create</button>
+        }
 
         @if (!string.IsNullOrWhiteSpace(this.Model.ErrorMessage))
         {
@@ -36,7 +39,12 @@
 
         @if (!string.IsNullOrWhiteSpace(this.Model.StatusMessage))
         {
-            <span class="text-info">@this.Model.StatusMessage</span>
+            <span class="status-info">@this.Model.StatusMessage</span>
+        }
+
+        @if(!string.IsNullOrWhiteSpace(this.Model.Certificate))
+        {
+            <textarea style="border: 1px solid #424242; background-color: #242424; color: white" rows="10">@this.Model.Certificate</textarea> 
         }
     </form>
 </div>

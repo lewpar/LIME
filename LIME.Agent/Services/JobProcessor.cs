@@ -4,25 +4,26 @@ using LIME.Shared.Models;
 
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
 using System.Diagnostics;
 
 namespace LIME.Agent.Services;
 
-public class TaskProcessor : BackgroundService
+public class JobProcessor : BackgroundService
 {
-    private Dictionary<LimeTaskType, ILimeTask> tasks;
+    private Dictionary<JobType, IJob> jobs;
 
-    private readonly TaskQueue queue;
+    private readonly JobQueue queue;
     private readonly LimeAgentConfig config;
-    private readonly ILogger<TaskProcessor> logger;
+    private readonly ILogger<JobProcessor> logger;
 
     private Stopwatch stopwatch;
 
-    public TaskProcessor(TaskQueue queue, LimeAgentConfig config, ILogger<TaskProcessor> logger)
+    public JobProcessor(JobQueue queue, LimeAgentConfig config, ILogger<JobProcessor> logger)
     {
-        tasks = new Dictionary<LimeTaskType, ILimeTask>()
+        jobs = new Dictionary<JobType, IJob>()
         {
-            { LimeTaskType.Statistics, new StatisticsTask() },
+            { JobType.Statistics, new StatisticsJob() },
         };
 
         this.queue = queue;
@@ -43,10 +44,10 @@ public class TaskProcessor : BackgroundService
                 continue;
             }
 
-            TaskContext? task = queue.TryDequeue();
+            JobContext? task = queue.TryDequeue();
             if (task is null)
             {
-                logger.LogCritical("Failed to dequeue a task.");
+                logger.LogCritical("Failed to dequeue a job.");
                 continue;
             }
 
@@ -54,23 +55,21 @@ public class TaskProcessor : BackgroundService
         }
     }
 
-    private async Task ProcessTaskAsync(TaskContext context)
+    private async Task ProcessTaskAsync(JobContext context)
     {
-        LimeTask task = context.Task;
-
-        if (!tasks.ContainsKey(task.Type))
+        if (!jobs.ContainsKey(context.Type))
         {
-            logger.LogCritical($"No task with the type '{task.Type}' is registered.");
+            logger.LogCritical($"No job with the type '{context.Type}' is registered.");
             return;
         }
 
 
-        logger.LogInformation($"Executing task '{task.Type}'..");
+        logger.LogInformation($"Executing job '{context.Type}'..");
 
         stopwatch.Restart();
-        await tasks[task.Type].ExecuteAsync(context);
+        await jobs[context.Type].ExecuteAsync(context);
         stopwatch.Stop();
 
-        logger.LogInformation($"Task '{task.Type}' finished executing in {stopwatch.ElapsedMilliseconds}ms..");
+        logger.LogInformation($"Job '{context.Type}' finished executing in {stopwatch.ElapsedMilliseconds}ms..");
     }
 }

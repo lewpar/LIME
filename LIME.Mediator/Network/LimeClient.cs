@@ -45,9 +45,9 @@ public class LimeClient
     public LimeEndpoint Endpoint { get; set; }
 
     /// <summary>
-    /// Gets the queue of tasks scheduled to be sent to the client.
+    /// Gets the queue of jobs scheduled to be sent to the client.
     /// </summary>
-    public Queue<LimeTask> Tasks { get; private set; }
+    public Queue<JobType> Jobs { get; private set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LimeClient"/> class with the specified TCP client and SSL stream.
@@ -61,7 +61,7 @@ public class LimeClient
 
         Endpoint = new LimeEndpoint(IPAddress.Any.MapToIPv4().ToString(), 0);
 
-        Tasks = new Queue<LimeTask>();
+        Jobs = new Queue<JobType>();
     }
 
     /// <summary>
@@ -100,11 +100,11 @@ public class LimeClient
     }
 
     /// <summary>
-    /// Queues a <see cref="LimeTask">task</see> to be sent to the client.
+    /// Queues a <see cref="JobType">job</see> to be sent to the client.
     /// </summary>
-    /// <param name="task">The task to be queued.</param>
-    public void QueueTask(LimeTask task)
+    /// <param name="job">The job to be queued.</param>
+    public void QueueTask(JobType job)
     {
-        Tasks.Enqueue(task);
+        Jobs.Enqueue(job);
     }
 }

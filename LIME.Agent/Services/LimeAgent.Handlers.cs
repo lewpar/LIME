@@ -43,54 +43,23 @@ public partial class LimeAgent
 
         logger.LogInformation($"Disconnected: {Encoding.UTF8.GetString(data)}");
 
-        await DisconnectAsync();
+        Disconnect();
     }
 
-    private async Task HandleTaskAsync(SslStream stream)
+    private async Task HandleJobAsync(SslStream stream)
     {
-        var taskType = await stream.ReadEnumAsync<LimeTaskType>();
-        if(taskType is null)
+        var jobType = await stream.ReadEnumAsync<JobType>();
+        if(jobType is null)
         {
-            logger.LogCritical("Failed to read task type from stream, disconnecting..");
+            logger.LogCritical("Failed to read job type from stream, disconnecting..");
 
-            await DisconnectAsync();
+            Disconnect();
             return;
         }
 
-        if(taskType != LimeTaskType.Execute)
+        taskQueue.Enqueue(new JobContext()
         {
-            taskQueue.Enqueue(new TaskContext()
-            {
-                Task = new LimeTask()
-                {
-                    Type = taskType.Value
-                },
-                Stream = stream
-            });
-
-            return;
-        }
-
-        var argsLen = await stream.ReadIntAsync();
-        var argsBuf = await stream.ReadBytesAsync(argsLen);
-
-        if(argsBuf is null)
-        {
-            logger.LogCritical("Failed to read args from stream, disconnecting..");
-
-            await DisconnectAsync();
-            return;
-        }
-
-        var args = Encoding.UTF8.GetString(argsBuf);
-
-        taskQueue.Enqueue(new TaskContext()
-        {
-            Task = new LimeTask()
-            {
-                Type = taskType.Value,
-                Args = args
-            },
+            Type = jobType.Value,
             Stream = stream
         });
     }

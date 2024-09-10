@@ -1,5 +1,6 @@
 ﻿using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 
 namespace LIME.Shared.Crypto;
 
@@ -247,5 +248,51 @@ public class LimeCertificate
         }
 
         return null;
+    }
+
+    public static string? ExportPrivateKeyAsPem(X509Certificate2 certificate)
+    {
+        if (!certificate.HasPrivateKey)
+        {
+            return null;
+        }
+
+        RSA? rsaPrivateKey = certificate.GetRSAPrivateKey();
+        if (rsaPrivateKey != null)
+        {
+            byte[] privateKeyBytes = rsaPrivateKey.ExportPkcs8PrivateKey();
+            string base64PrivateKey = Convert.ToBase64String(privateKeyBytes, Base64FormattingOptions.InsertLineBreaks);
+            return $"-----BEGIN PRIVATE KEY-----\n{base64PrivateKey}\n-----END PRIVATE KEY-----";
+        }
+
+        return null;
+    }
+
+    public static string ExportCertificateAsPem(X509Certificate2 certificate)
+    {
+        byte[] certBytes = certificate.Export(X509ContentType.Cert);
+        string base64Cert = Convert.ToBase64String(certBytes, Base64FormattingOptions.InsertLineBreaks);
+        return $"-----BEGIN CERTIFICATE-----\n{base64Cert}\n-----END CERTIFICATE-----";
+    }
+
+    public static string ConvertCertificateChainToPem(X509Certificate2Collection chain, X509Certificate2? privateCert)
+    {
+        StringBuilder pemBuilder = new StringBuilder();
+
+        foreach (var cert in chain)
+        {
+            pemBuilder.AppendLine(ExportCertificateAsPem(cert));
+        }
+
+        if (privateCert is not null)
+        {
+            string? privateKeyPem = ExportPrivateKeyAsPem(privateCert);
+            if (!string.IsNullOrEmpty(privateKeyPem))
+            {
+                pemBuilder.AppendLine(privateKeyPem);
+            }
+        }
+
+        return pemBuilder.ToString();
     }
 }

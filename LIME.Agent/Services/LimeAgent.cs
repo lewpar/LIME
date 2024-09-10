@@ -1,7 +1,7 @@
 ﻿using LIME.Agent.Configuration;
+
 using LIME.Shared.Crypto;
 using LIME.Shared.Extensions;
-using LIME.Shared.Models;
 using LIME.Shared.Network;
 
 using Microsoft.Extensions.Hosting;
@@ -31,10 +31,10 @@ public partial class LimeAgent : IHostedService
 
     private readonly ILogger<LimeAgent> logger;
     private readonly LimeAgentConfig config;
-    private readonly TaskQueue taskQueue;
+    private readonly JobQueue taskQueue;
     private System.Timers.Timer heartbeatTimer;
 
-    public LimeAgent(ILogger<LimeAgent> logger, LimeAgentConfig config, TaskQueue taskQueue)
+    public LimeAgent(ILogger<LimeAgent> logger, LimeAgentConfig config, JobQueue taskQueue)
     {
         this.logger = logger;
         this.config = config;
@@ -49,7 +49,7 @@ public partial class LimeAgent : IHostedService
         PacketHandlers = new Dictionary<LimeOpCodes, Func<SslStream, Task>>()
         {
             { LimeOpCodes.SMSG_DISCONNECT, HandleDisconnectAsync },
-            { LimeOpCodes.SMSG_TASK, HandleTaskAsync }
+            { LimeOpCodes.SMSG_JOB, HandleJobAsync }
         };
 
         client = new TcpClient();
@@ -221,7 +221,7 @@ public partial class LimeAgent : IHostedService
         certificate = cert;
     }
 
-    private async Task DisconnectAsync()
+    private void Disconnect()
     {
         client.Close();
         connected = false;
