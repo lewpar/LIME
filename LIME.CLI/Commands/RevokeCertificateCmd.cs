@@ -75,14 +75,4 @@ internal class RevokeCertificateCmd : LimeCommand
 
         return true;
     }
-
-    private byte[]? LoadCrl(string path)
-    {
-        if (!File.Exists(path))
-        {
-            return null;
-        }
-
-        return File.ReadAllBytes(path);
-    }
 }
