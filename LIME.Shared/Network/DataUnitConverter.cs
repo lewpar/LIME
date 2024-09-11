@@ -11,6 +11,11 @@ public class DataUnitConverter
     /// corresponding data unit in a formatted string.</returns>
     public static DataUnit GetDataUnitFromBytes(long bytes)
     {
+        if(bytes < 0)
+        {
+            throw new DataUnitConverterException("Bytes cannot be negative.");
+        }
+
         DataUnitType[] units = { DataUnitType.B, DataUnitType.KB, DataUnitType.MB, DataUnitType.GB, DataUnitType.TB };
 
         float amount = (float)bytes;
@@ -22,6 +27,6 @@ public class DataUnitConverter
             unitIndex++;
         }
 
-        return new DataUnit($"{amount:0.00}", units[unitIndex]);
+        return new DataUnit(amount, units[unitIndex]);
     }
 }
