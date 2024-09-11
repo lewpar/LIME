@@ -33,3 +33,4 @@ intermediate certificate authorities.
 ## Dependencies
 - EntityFrameworkCore
 - Pomelo.EntityFrameworkCore.MySql
+- xUnit

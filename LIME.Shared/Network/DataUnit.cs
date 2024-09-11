@@ -3,9 +3,9 @@
 public class DataUnit
 {
     public string Amount { get; }
-    public string Unit { get; }
+    public DataUnitType Unit { get; }
 
-    public DataUnit(string amount, string unit)
+    public DataUnit(string amount, DataUnitType unit)
     {
         this.Amount = amount;
         this.Unit = unit;

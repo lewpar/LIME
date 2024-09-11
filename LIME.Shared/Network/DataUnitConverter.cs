@@ -11,7 +11,7 @@ public class DataUnitConverter
     /// corresponding data unit in a formatted string.</returns>
     public static DataUnit GetDataUnitFromBytes(long bytes)
     {
-        string[] units = { "B", "KB", "MB", "GB", "TB" };
+        DataUnitType[] units = { DataUnitType.B, DataUnitType.KB, DataUnitType.MB, DataUnitType.GB, DataUnitType.TB };
 
         float amount = (float)bytes;
         int unitIndex = 0;
