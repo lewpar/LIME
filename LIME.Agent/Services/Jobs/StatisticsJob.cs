@@ -11,7 +11,7 @@ public class StatisticsJob : IJob
     {
         var stream = context.Stream;
 
-        var memory = await PerformanceMonitor.MeasureMemoryAsync();
+        var memory = await SystemMonitor.MeasureMemoryAsync();
 
         var packet = new StatisticPacket(LimeStatistic.RAM, memory.Min, memory.Max, memory.Current);
         await stream.WriteAsync(packet.Serialize());
